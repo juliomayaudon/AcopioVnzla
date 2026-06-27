@@ -32,7 +32,7 @@ function formatItemCantidad(item: DonItem) {
 }
 
 // ── types ─────────────────────────────────────────────────────────────────────
-interface Producto { id: string; nombre: string; unidad: string; categoria: { nombre: string } }
+interface Producto { id: string; nombre: string; unidad: string; tamanoDefault: number | null; categoria: { nombre: string } }
 interface ItemForm {
   productoId: string; cantidad: number; cantidadUnidades: number;
   tamanoUnidad: number; desglose: boolean; notas: string;
@@ -88,7 +88,12 @@ function ProductoCombobox({ value, productos, onChange }: {
   const openDropdown = () => {
     if (btnRef.current) {
       const r = btnRef.current.getBoundingClientRect();
-      setPos({ top: r.bottom + 4, left: r.left, width: r.width });
+      const dropdownH = 340;
+      const spaceBelow = window.innerHeight - r.bottom;
+      const spaceAbove = r.top;
+      const above = spaceBelow < dropdownH && spaceAbove > spaceBelow;
+      const top = above ? Math.max(8, r.top - dropdownH - 4) : r.bottom + 4;
+      setPos({ top, left: r.left, width: r.width });
     }
     setOpen(true);
     setTimeout(() => inputRef.current?.focus(), 30);
@@ -197,8 +202,11 @@ function ItemRow({ idx, item, productos, onChange, onRemove, canRemove }: {
   const prod      = productos.find(p => p.id === item.productoId) ?? null;
   const esVolumen = prod?.unidad === "LITROS" || prod?.unidad === "KG";
 
-  const handleProducto = (id: string) =>
-    onChange(idx, { productoId: id, cantidad: 0, cantidadUnidades: 0, tamanoUnidad: 0, desglose: true });
+  const handleProducto = (id: string) => {
+    const p = productos.find(x => x.id === id);
+    const def = p?.tamanoDefault ?? 0;
+    onChange(idx, { productoId: id, cantidad: 0, cantidadUnidades: 0, tamanoUnidad: def, desglose: true });
+  };
 
   const handleUnidades = (n: number) => {
     const total = item.tamanoUnidad > 0 ? parseFloat((n * item.tamanoUnidad).toFixed(6)) : 0;

@@ -73,14 +73,14 @@ async function main() {
     { nombre: "Sal",                          cat: "Alimentos no perecederos", unidad: "KG"       as const },
     { nombre: "Café soluble / instantáneo",   cat: "Alimentos no perecederos", unidad: "KG"       as const },
     { nombre: "Leche en polvo",               cat: "Alimentos no perecederos", unidad: "KG"       as const },
-    { nombre: "Leche evaporada (lata)",       cat: "Alimentos no perecederos", unidad: "LITROS"   as const },
-    { nombre: "Aceite vegetal",               cat: "Alimentos no perecederos", unidad: "LITROS"   as const },
+    { nombre: "Leche evaporada (lata)",       cat: "Alimentos no perecederos", unidad: "LITROS"   as const, tamanoDefault: 0.41 },
+    { nombre: "Aceite vegetal",               cat: "Alimentos no perecederos", unidad: "LITROS"   as const, tamanoDefault: 1 },
     { nombre: "Margarina / mantequilla",      cat: "Alimentos no perecederos", unidad: "KG"       as const },
     { nombre: "Galletas / crackers",          cat: "Alimentos no perecederos", unidad: "KG"       as const },
     { nombre: "Maní / frutos secos",          cat: "Alimentos no perecederos", unidad: "KG"       as const },
-    { nombre: "Atún en lata",                 cat: "Alimentos no perecederos", unidad: "KG"       as const },
-    { nombre: "Sardinas en lata",             cat: "Alimentos no perecederos", unidad: "KG"       as const },
-    { nombre: "Salsa de tomate",              cat: "Alimentos no perecederos", unidad: "KG"       as const },
+    { nombre: "Atún en lata",                 cat: "Alimentos no perecederos", unidad: "KG"       as const, tamanoDefault: 0.17 },
+    { nombre: "Sardinas en lata",             cat: "Alimentos no perecederos", unidad: "KG"       as const, tamanoDefault: 0.125 },
+    { nombre: "Salsa de tomate",              cat: "Alimentos no perecederos", unidad: "KG"       as const, tamanoDefault: 0.4 },
     { nombre: "Sopas instantáneas",           cat: "Alimentos no perecederos", unidad: "KG"       as const },
     { nombre: "Gelatina / postre instantáneo", cat: "Alimentos no perecederos", unidad: "KG"      as const },
     { nombre: "Harina de trigo",              cat: "Alimentos no perecederos", unidad: "KG"       as const },
@@ -92,18 +92,18 @@ async function main() {
     { nombre: "Maíz en grano",                cat: "Alimentos no perecederos", unidad: "KG"       as const },
     { nombre: "Caraotas blancas",             cat: "Alimentos no perecederos", unidad: "KG"       as const },
     { nombre: "Caraotas rojas",               cat: "Alimentos no perecederos", unidad: "KG"       as const },
-    { nombre: "Mermelada",                    cat: "Alimentos no perecederos", unidad: "KG"       as const },
+    { nombre: "Mermelada",                    cat: "Alimentos no perecederos", unidad: "KG"       as const, tamanoDefault: 0.5 },
     { nombre: "Miel",                         cat: "Alimentos no perecederos", unidad: "LITROS"   as const },
-    { nombre: "Vinagre",                      cat: "Alimentos no perecederos", unidad: "LITROS"   as const },
-    { nombre: "Mayonesa",                     cat: "Alimentos no perecederos", unidad: "KG"       as const },
-    { nombre: "Salsa de soya",                cat: "Alimentos no perecederos", unidad: "LITROS"   as const },
+    { nombre: "Vinagre",                      cat: "Alimentos no perecederos", unidad: "LITROS"   as const, tamanoDefault: 0.5 },
+    { nombre: "Mayonesa",                     cat: "Alimentos no perecederos", unidad: "KG"       as const, tamanoDefault: 0.5 },
+    { nombre: "Salsa de soya",                cat: "Alimentos no perecederos", unidad: "LITROS"   as const, tamanoDefault: 0.25 },
     { nombre: "Cubitos de caldo",             cat: "Alimentos no perecederos", unidad: "UNIDADES" as const },
     { nombre: "Chocolate en polvo / cacao",   cat: "Alimentos no perecederos", unidad: "KG"       as const },
     { nombre: "Chocolate en barra",           cat: "Alimentos no perecederos", unidad: "KG"       as const },
-    { nombre: "Pollo enlatado",               cat: "Alimentos no perecederos", unidad: "KG"       as const },
-    { nombre: "Carne enlatada (corned beef)", cat: "Alimentos no perecederos", unidad: "KG"       as const },
-    { nombre: "Vegetales en lata",            cat: "Alimentos no perecederos", unidad: "KG"       as const },
-    { nombre: "Frutas en almíbar",            cat: "Alimentos no perecederos", unidad: "KG"       as const },
+    { nombre: "Pollo enlatado",               cat: "Alimentos no perecederos", unidad: "KG"       as const, tamanoDefault: 0.34 },
+    { nombre: "Carne enlatada (corned beef)", cat: "Alimentos no perecederos", unidad: "KG"       as const, tamanoDefault: 0.34 },
+    { nombre: "Vegetales en lata",            cat: "Alimentos no perecederos", unidad: "KG"       as const, tamanoDefault: 0.4 },
+    { nombre: "Frutas en almíbar",            cat: "Alimentos no perecederos", unidad: "KG"       as const, tamanoDefault: 0.41 },
     { nombre: "Compota / puré de fruta",      cat: "Alimentos no perecederos", unidad: "UNIDADES" as const },
     { nombre: "Cereal de desayuno",           cat: "Alimentos no perecederos", unidad: "KG"       as const },
     { nombre: "Fideos instantáneos / ramen",  cat: "Alimentos no perecederos", unidad: "UNIDADES" as const },
@@ -113,7 +113,7 @@ async function main() {
     { nombre: "Especias y condimentos",       cat: "Alimentos no perecederos", unidad: "KG"       as const },
     { nombre: "Mezclas para tortas / panqueques", cat: "Alimentos no perecederos", unidad: "KG"   as const },
     { nombre: "Polenta",                      cat: "Alimentos no perecederos", unidad: "KG"       as const },
-    { nombre: "Encurtidos en frasco",         cat: "Alimentos no perecederos", unidad: "KG"       as const },
+    { nombre: "Encurtidos en frasco",         cat: "Alimentos no perecederos", unidad: "KG"       as const, tamanoDefault: 0.5 },
 
     // ── Agua e hidratación ───────────────────────────────────────────
     { nombre: "Agua embotellada",             cat: "Agua e hidratación", unidad: "LITROS"   as const },
@@ -384,6 +384,7 @@ async function main() {
   ];
 
   for (const p of productos) {
+    const tamanoDefault = ("tamanoDefault" in p ? (p as { tamanoDefault?: number }).tamanoDefault : null) ?? null;
     const existe = await prisma.producto.findFirst({ where: { nombre: p.nombre } });
     if (!existe) {
       await prisma.producto.create({
@@ -392,13 +393,14 @@ async function main() {
           unidad: p.unidad,
           valorUnitario: null,
           etiquetaUnidad: null,
+          tamanoDefault,
           categoriaId: catMap[p.cat],
         },
       });
     } else {
       await prisma.producto.update({
         where: { id: existe.id },
-        data: { unidad: p.unidad, valorUnitario: null, etiquetaUnidad: null, categoriaId: catMap[p.cat] },
+        data: { unidad: p.unidad, valorUnitario: null, etiquetaUnidad: null, tamanoDefault, categoriaId: catMap[p.cat] },
       });
     }
   }
