@@ -95,7 +95,7 @@ export default function HomePage() {
       </nav>
 
       {/* ── Hero ── */}
-      <section className="relative min-h-screen flex flex-col items-center justify-center text-center px-6 pt-14 overflow-hidden"
+      <section className="relative min-h-screen flex flex-col items-center justify-center text-center px-6 pt-14 pb-32 overflow-hidden"
         style={{ background: "linear-gradient(135deg, #0f1f5c 0%, #1B3078 50%, #1e3a8a 100%)" }}>
         <div className="absolute inset-0 pointer-events-none">
           <div className="absolute -top-40 -right-40 w-96 h-96 rounded-full opacity-10"
