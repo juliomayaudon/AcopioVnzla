@@ -83,6 +83,10 @@ async function main() {
     { nombre: "Salsa de tomate",              cat: "Alimentos no perecederos", unidad: "KG"       as const },
     { nombre: "Sopas instantáneas",           cat: "Alimentos no perecederos", unidad: "KG"       as const },
     { nombre: "Gelatina / postre instantáneo", cat: "Alimentos no perecederos", unidad: "KG"      as const },
+    { nombre: "Harina de trigo",              cat: "Alimentos no perecederos", unidad: "KG"       as const },
+    { nombre: "Quinua",                       cat: "Alimentos no perecederos", unidad: "KG"       as const },
+    { nombre: "Frijoles",                     cat: "Alimentos no perecederos", unidad: "KG"       as const },
+    { nombre: "Gomitas",                      cat: "Alimentos no perecederos", unidad: "KG"       as const },
 
     // ── Agua e hidratación ───────────────────────────────────────────
     { nombre: "Agua embotellada",             cat: "Agua e hidratación", unidad: "LITROS"   as const },
@@ -124,6 +128,7 @@ async function main() {
     { nombre: "Pañales adulto",               cat: "Higiene personal", unidad: "UNIDADES" as const },
     { nombre: "Desodorante",                  cat: "Higiene personal", unidad: "UNIDADES" as const },
     { nombre: "Máquinas de afeitar",          cat: "Higiene personal", unidad: "UNIDADES" as const },
+    { nombre: "Enjuague bucal",               cat: "Higiene personal", unidad: "UNIDADES" as const },
 
     // ── Ropa y calzado ───────────────────────────────────────────────
     { nombre: "Ropa adulto",                  cat: "Ropa y calzado", unidad: "KG" as const },
@@ -150,6 +155,7 @@ async function main() {
     { nombre: "Cubiertos",                    cat: "Artículos del hogar", unidad: "UNIDADES" as const },
     { nombre: "Velas / candelas",             cat: "Artículos del hogar", unidad: "UNIDADES" as const },
     { nombre: "Fósforos / encendedores",      cat: "Artículos del hogar", unidad: "UNIDADES" as const },
+    { nombre: "Protector de cama",            cat: "Artículos del hogar", unidad: "UNIDADES" as const },
 
     // ── Herramientas y equipos ───────────────────────────────────────
     { nombre: "Linternas",                    cat: "Herramientas y equipos", unidad: "UNIDADES" as const },
