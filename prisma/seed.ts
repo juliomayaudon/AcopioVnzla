@@ -201,52 +201,56 @@ async function main() {
   }
   console.log(`✓ ${productos.length} productos`);
 
-  // ── Centro ───────────────────────────────────────────────────────────
-  const centroCuenca = await prisma.centroAcopio.upsert({
-    where: { id: "centro-cuenca-ecuador" },
-    update: { latitud: -2.9001, longitud: -79.0059, responsable: "Admin Cuenca" },
-    create: {
-      id: "centro-cuenca-ecuador",
-      nombre: "Centro Cuenca",
-      ciudad: "Cuenca",
-      pais: "Ecuador",
-      direccion: "Por definir",
-      responsable: "Admin Cuenca",
-      latitud: -2.9001,
-      longitud: -79.0059,
-      activo: true,
-    },
-  });
-  console.log(`✓ Centro Cuenca: ${centroCuenca.id}`);
+  // ── Super Administrador ───────────────────────────────────────────────
+  // En producción define SEED_SUPERADMIN_EMAIL y SEED_SUPERADMIN_PASSWORD.
+  const SUPERADMIN_EMAIL = process.env.SEED_SUPERADMIN_EMAIL || "superadmin@acopiovzla.com";
+  const SUPERADMIN_PASS = process.env.SEED_SUPERADMIN_PASSWORD || "SuperAdmin2024!";
+  if (!process.env.SEED_SUPERADMIN_PASSWORD) {
+    console.warn("⚠ Usando contraseña de superadmin POR DEFECTO (solo para desarrollo).");
+    console.warn("  En producción define SEED_SUPERADMIN_PASSWORD con una clave fuerte.");
+  }
 
-  // ── Usuarios ─────────────────────────────────────────────────────────
-  await prisma.usuario.upsert({
-    where: { email: "superadmin@acopiovzla.com" },
-    update: { rol: "SUPERADMIN", centroAcopioId: null },
-    create: {
-      nombre: "Super Administrador",
-      email: "superadmin@acopiovzla.com",
-      passwordHash: await bcrypt.hash("SuperAdmin2024!", 12),
-      rol: "SUPERADMIN",
-    },
-  });
+  const existeSuper = await prisma.usuario.findUnique({ where: { email: SUPERADMIN_EMAIL } });
+  if (existeSuper) {
+    await prisma.usuario.update({ where: { email: SUPERADMIN_EMAIL }, data: { rol: "SUPERADMIN", activo: true } });
+  } else {
+    await prisma.usuario.create({
+      data: {
+        nombre: "Super Administrador",
+        email: SUPERADMIN_EMAIL,
+        passwordHash: await bcrypt.hash(SUPERADMIN_PASS, 12),
+        rol: "SUPERADMIN",
+      },
+    });
+  }
+  console.log(`✓ Superadmin: ${SUPERADMIN_EMAIL}`);
 
-  await prisma.usuario.upsert({
-    where: { email: "admin@acopiovzla.com" },
-    update: { rol: "ADMIN", centroAcopioId: centroCuenca.id },
-    create: {
-      nombre: "Admin Cuenca",
-      email: "admin@acopiovzla.com",
-      passwordHash: await bcrypt.hash("Admin2024!", 12),
-      rol: "ADMIN",
-      centroAcopioId: centroCuenca.id,
-    },
-  });
-  console.log("✓ Usuarios creados");
+  // ── Datos de demostración (centro + admin de prueba) ──────────────────
+  // Solo se crean si SEED_DEMO=true (NO usar en producción).
+  if (process.env.SEED_DEMO === "true") {
+    const centroCuenca = await prisma.centroAcopio.upsert({
+      where: { id: "centro-cuenca-ecuador" },
+      update: { latitud: -2.9001, longitud: -79.0059, responsable: "Admin Cuenca" },
+      create: {
+        id: "centro-cuenca-ecuador",
+        nombre: "Centro Cuenca", ciudad: "Cuenca", pais: "Ecuador",
+        direccion: "Por definir", responsable: "Admin Cuenca",
+        latitud: -2.9001, longitud: -79.0059, activo: true,
+      },
+    });
+    await prisma.usuario.upsert({
+      where: { email: "admin@acopiovzla.com" },
+      update: { rol: "ADMIN", centroAcopioId: centroCuenca.id },
+      create: {
+        nombre: "Admin Cuenca", email: "admin@acopiovzla.com",
+        passwordHash: await bcrypt.hash("Admin2024!", 12),
+        rol: "ADMIN", centroAcopioId: centroCuenca.id,
+      },
+    });
+    console.log("✓ Datos de demostración creados (Centro Cuenca + admin)");
+  }
 
   console.log("\n✅ Seed completado!");
-  console.log("   superadmin@acopiovzla.com  /  SuperAdmin2024!");
-  console.log("   admin@acopiovzla.com       /  Admin2024!");
 }
 
 main()
