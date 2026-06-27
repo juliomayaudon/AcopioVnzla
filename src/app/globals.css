@@ -2,7 +2,17 @@
 
 :root {
   --background: #ffffff;
-  --foreground: #171717;
+  --foreground: #0f172a;
+
+  /* Comando Con Vzla palette */
+  --navy:       #1B3078;
+  --navy-dark:  #142360;
+  --navy-light: #2440A0;
+  --cyan:       #00A8E8;
+  --cyan-dark:  #0090C8;
+  --cyan-light: #33BDF0;
+  --cyan-pale:  #E6F6FD;
+  --navy-pale:  #EEF1FB;
 }
 
 @theme inline {
@@ -10,17 +20,37 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
-}
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --color-navy:       var(--navy);
+  --color-navy-dark:  var(--navy-dark);
+  --color-navy-light: var(--navy-light);
+  --color-cyan:       var(--cyan);
+  --color-cyan-dark:  var(--cyan-dark);
+  --color-cyan-light: var(--cyan-light);
+  --color-cyan-pale:  var(--cyan-pale);
+  --color-navy-pale:  var(--navy-pale);
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
 }
+
+/* Quitar el contorno de foco de los gráficos (recharts) al hacer clic */
+.recharts-wrapper:focus,
+.recharts-surface:focus,
+.recharts-sector:focus,
+.recharts-rectangle:focus,
+.recharts-pie-sector:focus,
+.recharts-bar-rectangle:focus,
+g:focus,
+path:focus {
+  outline: none !important;
+}
+
+/* Scrollbar sutil */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: #f1f5f9; }
+::-webkit-scrollbar-thumb { background: var(--navy-light); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--navy); }

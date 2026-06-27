@@ -1,0 +1,248 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Rol {
+  SUPERADMIN
+  ADMIN_PAIS
+  ADMIN
+  COORDINADOR
+  VOLUNTARIO
+  SOLO_LECTURA
+}
+
+enum EstadoEnvio {
+  PREPARANDO
+  EN_TRANSITO
+  ENTREGADO
+}
+
+enum MotivoConsumo {
+  HIDRATACION_EQUIPO
+  ALIMENTACION_EQUIPO
+  BOTIQUIN_VOLUNTARIOS
+  MATERIALES_OPERACION
+  OTRO
+}
+
+enum UnidadMedida {
+  KG
+  LITROS
+  UNIDADES
+  CAJAS
+  PAQUETES
+}
+
+model CentroAcopio {
+  id           String    @id @default(cuid())
+  nombre       String
+  ciudad       String
+  pais         String
+  direccion    String?
+  responsable  String
+  telefono     String?
+  whatsapp     String?
+  email        String?
+  latitud       Float?
+  longitud      Float?
+  bannerUrl     String?
+  bannerPublicId String?
+  activo       Boolean   @default(true)
+  creadoEn     DateTime  @default(now())
+  actualizadoEn DateTime @updatedAt
+
+  usuarios       Usuario[]
+  donaciones     Donacion[]
+  envios         Envio[]
+  inventarios    Inventario[]
+  consumos       ConsumoInterno[]
+}
+
+model Usuario {
+  id            String    @id @default(cuid())
+  nombre        String
+  email         String?   @unique
+  passwordHash  String?
+  rol           Rol       @default(VOLUNTARIO)
+  activo        Boolean   @default(true)
+  creadoEn      DateTime  @default(now())
+
+  // Datos personales (especialmente para voluntarios)
+  nacionalidad    String?
+  paisResidencia  String?
+  ciudad          String?
+  edad            Int?
+  telefono        String?
+
+  // Países que administra (solo para rol ADMIN_PAIS)
+  paisesAdmin     String[]  @default([])
+
+  centroAcopioId String?
+  centroAcopio   CentroAcopio? @relation(fields: [centroAcopioId], references: [id])
+
+  donacionesRegistradas Donacion[]
+  consumosRegistrados   ConsumoInterno[]
+}
+
+model Categoria {
+  id          String     @id @default(cuid())
+  nombre      String     @unique
+  descripcion String?
+  icono       String?
+
+  productos Producto[]
+}
+
+model Producto {
+  id             String       @id @default(cuid())
+  nombre         String
+  descripcion    String?
+  unidad         UnidadMedida @default(UNIDADES)
+  valorUnitario  Float?
+  etiquetaUnidad String?
+
+  categoriaId  String
+  categoria    Categoria    @relation(fields: [categoriaId], references: [id])
+
+  itemsDonacion  ItemDonacion[]
+  itemsEnvio     ItemEnvio[]
+  itemsConsumo   ItemConsumo[]
+  inventarios    Inventario[]
+}
+
+model Donacion {
+  id                  String    @id @default(cuid())
+  donante             String?
+  nacionalidadDonante String?
+  notas               String?
+  creadoEn            DateTime  @default(now())
+
+  centroAcopioId  String
+  centroAcopio    CentroAcopio @relation(fields: [centroAcopioId], references: [id])
+
+  registradoPorId String?
+  registradoPor   Usuario?  @relation(fields: [registradoPorId], references: [id])
+
+  items  ItemDonacion[]
+  fotos  Foto[]
+}
+
+model ItemDonacion {
+  id               String  @id @default(cuid())
+  cantidad         Float
+  cantidadUnidades Float?
+  notas            String?
+
+  donacionId String
+  donacion   Donacion @relation(fields: [donacionId], references: [id], onDelete: Cascade)
+
+  productoId String
+  producto   Producto @relation(fields: [productoId], references: [id])
+}
+
+model Inventario {
+  id             String   @id @default(cuid())
+  cantidadTotal  Float    @default(0)
+  actualizadoEn  DateTime @updatedAt
+
+  centroAcopioId String
+  centroAcopio   CentroAcopio @relation(fields: [centroAcopioId], references: [id])
+
+  productoId     String
+  producto       Producto     @relation(fields: [productoId], references: [id])
+
+  @@unique([centroAcopioId, productoId])
+}
+
+model Foto {
+  id          String   @id @default(cuid())
+  url         String
+  publicId    String?
+  descripcion String?
+  creadoEn    DateTime @default(now())
+
+  donacionId  String?
+  donacion    Donacion? @relation(fields: [donacionId], references: [id], onDelete: Cascade)
+
+  envioId     String?
+  envio       Envio?    @relation(fields: [envioId], references: [id], onDelete: Cascade)
+}
+
+model Envio {
+  id             String      @id @default(cuid())
+  destino        String
+  notas          String?
+  estado         EstadoEnvio @default(PREPARANDO)
+
+  // Receptor en destino
+  organizacionReceptora String?
+  contactoReceptor      String?
+
+  // Transporte
+  transportista     String?
+  tipoTransporte    String?
+  numeroGuia        String?
+  placaContenedor   String?
+  conductor         String?
+  contactoConductor String?
+
+  // Fechas
+  fechaEnvio     DateTime?
+  fechaEstimada  DateTime?
+  fechaEntrega   DateTime?
+
+  // Carga
+  pesoTotal      Float?
+  numeroBultos   Int?
+
+  creadoEn       DateTime    @default(now())
+  actualizadoEn  DateTime    @updatedAt
+
+  centroAcopioId String
+  centroAcopio   CentroAcopio @relation(fields: [centroAcopioId], references: [id])
+
+  items ItemEnvio[]
+  fotos Foto[]
+}
+
+model ItemEnvio {
+  id       String @id @default(cuid())
+  cantidad Float
+
+  envioId    String
+  envio      Envio    @relation(fields: [envioId], references: [id], onDelete: Cascade)
+
+  productoId String
+  producto   Producto @relation(fields: [productoId], references: [id])
+}
+
+model ConsumoInterno {
+  id          String         @id @default(cuid())
+  motivo      MotivoConsumo  @default(OTRO)
+  descripcion String?
+  creadoEn    DateTime       @default(now())
+
+  centroAcopioId  String
+  centroAcopio    CentroAcopio @relation(fields: [centroAcopioId], references: [id])
+
+  registradoPorId String?
+  registradoPor   Usuario?     @relation(fields: [registradoPorId], references: [id])
+
+  items ItemConsumo[]
+}
+
+model ItemConsumo {
+  id       String @id @default(cuid())
+  cantidad Float
+
+  consumoId  String
+  consumo    ConsumoInterno @relation(fields: [consumoId], references: [id], onDelete: Cascade)
+
+  productoId String
+  producto   Producto       @relation(fields: [productoId], references: [id])
+}
