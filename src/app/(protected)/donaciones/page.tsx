@@ -809,16 +809,16 @@ export default function DonacionesPage() {
                     <label className="text-xs font-bold text-gray-700 uppercase tracking-widest">Productos donados</label>
                     <span className="text-xs text-gray-400">{validItems.length} listo{validItems.length !== 1 ? "s" : ""}</span>
                   </div>
+                  <button type="button" onClick={() => setItems(p => [{ ...BLANK_ITEM }, ...p])}
+                    className="mb-2 w-full flex items-center justify-center gap-2 py-2 text-sm text-[#1B3078] font-medium border-2 border-dashed border-[#1B3078]/20 rounded-xl hover:border-[#1B3078]/40 hover:bg-[#EEF1FB] transition-colors">
+                    <Plus size={15} /> Agregar otro producto
+                  </button>
                   <div className="space-y-2 max-h-[50vh] overflow-y-auto pr-1">
                     {items.map((item, i) => (
                       <ItemRow key={i} idx={i} item={item} productos={productos}
                         onChange={changeItem} onRemove={removeItem} canRemove={items.length > 1} />
                     ))}
                   </div>
-                  <button type="button" onClick={() => setItems(p => [...p, { ...BLANK_ITEM }])}
-                    className="mt-2 w-full flex items-center justify-center gap-2 py-2 text-sm text-[#1B3078] font-medium border-2 border-dashed border-[#1B3078]/20 rounded-xl hover:border-[#1B3078]/40 hover:bg-[#EEF1FB] transition-colors">
-                    <Plus size={15} /> Agregar otro producto
-                  </button>
                 </div>
               </div>
               <div className="px-6 py-4 border-t border-gray-100 flex items-center justify-between gap-3 shrink-0 bg-white">
