@@ -79,9 +79,10 @@ function ProductoCombobox({ value, productos, onChange }: {
 
   const selected   = productos.find(p => p.id === value);
   const categorias = useMemo(() => [...new Set(productos.map(p => p.categoria.nombre))].sort(), [productos]);
-  const q          = search.trim().toLowerCase();
+  const norm = (s: string) => s.toLowerCase().normalize("NFD").replace(/\p{Diacritic}/gu, "");
+  const q          = norm(search.trim());
   const filtered   = q
-    ? productos.filter(p => p.nombre.toLowerCase().includes(q) || p.categoria.nombre.toLowerCase().includes(q))
+    ? productos.filter(p => norm(p.nombre).includes(q) || norm(p.categoria.nombre).includes(q))
     : productos;
 
   const openDropdown = () => {
@@ -235,7 +236,7 @@ function ItemRow({ idx, item, productos, onChange, onRemove, canRemove }: {
           ) : (
             <div className="flex items-center gap-2">
               <div className="flex items-center gap-1.5 bg-white border border-gray-200 rounded-lg px-2 py-1.5">
-                <input type="number" min="0" step={prod.unidad === "UNIDADES" ? "1" : "0.1"}
+                <input type="number" min="0" step={prod.unidad === "UNIDADES" ? "1" : "0.001"}
                   value={item.cantidad || ""}
                   onChange={e => onChange(idx, { cantidad: Number(e.target.value) })} placeholder="0"
                   className="w-20 text-sm text-center focus:outline-none bg-transparent font-medium" />
@@ -808,7 +809,7 @@ export default function DonacionesPage() {
                     <label className="text-xs font-bold text-gray-700 uppercase tracking-widest">Productos donados</label>
                     <span className="text-xs text-gray-400">{validItems.length} listo{validItems.length !== 1 ? "s" : ""}</span>
                   </div>
-                  <div className="space-y-2">
+                  <div className="space-y-2 max-h-[50vh] overflow-y-auto pr-1">
                     {items.map((item, i) => (
                       <ItemRow key={i} idx={i} item={item} productos={productos}
                         onChange={changeItem} onRemove={removeItem} canRemove={items.length > 1} />

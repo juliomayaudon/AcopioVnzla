@@ -797,7 +797,7 @@ export default function EnviosPage() {
                       <input type="date" value={form.fechaEntrega} onChange={e => setF("fechaEntrega", e.target.value)} className={inputCls} />
                     </Field>
                     <Field label="Peso total (kg)">
-                      <input type="number" min="0" step="0.1" value={form.pesoTotal} onChange={e => setF("pesoTotal", e.target.value)} placeholder="0" className={inputCls} />
+                      <input type="number" min="0" step="0.001" value={form.pesoTotal} onChange={e => setF("pesoTotal", e.target.value)} placeholder="0" className={inputCls} />
                     </Field>
                     <Field label="N° de bultos / cajas">
                       <input type="number" min="0" step="1" value={form.numeroBultos} onChange={e => setF("numeroBultos", e.target.value)} placeholder="0" className={inputCls} />
