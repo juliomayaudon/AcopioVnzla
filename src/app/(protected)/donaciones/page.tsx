@@ -205,8 +205,9 @@ function ItemRow({ idx, item, productos, onChange, onRemove, canRemove }: {
     onChange(idx, { cantidadUnidades: n, cantidad: total });
   };
   const handleTamano = (t: number) => {
-    const total = item.cantidadUnidades > 0 ? parseFloat((item.cantidadUnidades * t).toFixed(6)) : 0;
-    onChange(idx, { tamanoUnidad: t, cantidad: total });
+    const unidades = item.cantidadUnidades > 0 ? item.cantidadUnidades : (t > 0 ? 1 : 0);
+    const total = unidades > 0 && t > 0 ? parseFloat((unidades * t).toFixed(6)) : 0;
+    onChange(idx, { tamanoUnidad: t, cantidad: total, cantidadUnidades: unidades });
   };
   const totalCalc = item.cantidadUnidades > 0 && item.tamanoUnidad > 0
     ? parseFloat((item.cantidadUnidades * item.tamanoUnidad).toFixed(4)) : null;
