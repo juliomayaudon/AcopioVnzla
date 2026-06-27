@@ -165,6 +165,29 @@ function ProductoCombobox({ value, productos, onChange }: {
   );
 }
 
+// ── NumberInput: input numérico con buffer string para aceptar "0" y "0.4" ──
+function NumberInput({ value, onChange, step, className, placeholder = "0" }: {
+  value: number; onChange: (n: number) => void;
+  step: string; className: string; placeholder?: string;
+}) {
+  const [str, setStr] = useState(value ? String(value) : "");
+  useEffect(() => {
+    const parsed = parseFloat(str);
+    if (value !== parsed && !(isNaN(parsed) && value === 0)) {
+      setStr(value ? String(value) : "");
+    }
+  }, [value]); // eslint-disable-line react-hooks/exhaustive-deps
+  return (
+    <input type="number" min="0" step={step} value={str} placeholder={placeholder}
+      className={className}
+      onChange={e => {
+        setStr(e.target.value);
+        const n = parseFloat(e.target.value);
+        onChange(isNaN(n) ? 0 : n);
+      }} />
+  );
+}
+
 // ── ItemRow ───────────────────────────────────────────────────────────────────
 function ItemRow({ idx, item, productos, onChange, onRemove, canRemove }: {
   idx: number; item: ItemForm; productos: Producto[];
@@ -215,14 +238,12 @@ function ItemRow({ idx, item, productos, onChange, onRemove, canRemove }: {
             <div className="flex items-center gap-2 flex-wrap">
               <div className="flex items-center gap-1.5 bg-white border border-gray-200 rounded-lg px-2 py-1.5">
                 <Hash size={13} className="text-gray-400" />
-                <input type="number" min="0" step="1" value={item.cantidadUnidades || ""}
-                  onChange={e => handleUnidades(Number(e.target.value))} placeholder="0"
+                <NumberInput value={item.cantidadUnidades} onChange={handleUnidades} step="1"
                   className="w-14 text-sm text-center focus:outline-none bg-transparent font-medium" />
               </div>
               <span className="text-gray-400 text-sm">unid. ×</span>
               <div className="flex items-center gap-1 bg-white border border-gray-200 rounded-lg px-2 py-1.5">
-                <input type="number" min="0" step="0.001" value={item.tamanoUnidad || ""}
-                  onChange={e => handleTamano(Number(e.target.value))} placeholder="0"
+                <NumberInput value={item.tamanoUnidad} onChange={handleTamano} step="0.001"
                   className="w-16 text-sm text-center focus:outline-none bg-transparent font-medium" />
                 <span className="text-xs text-gray-500 font-medium">{unidadLabel(prod.unidad)}</span>
               </div>
@@ -236,9 +257,9 @@ function ItemRow({ idx, item, productos, onChange, onRemove, canRemove }: {
           ) : (
             <div className="flex items-center gap-2">
               <div className="flex items-center gap-1.5 bg-white border border-gray-200 rounded-lg px-2 py-1.5">
-                <input type="number" min="0" step={prod.unidad === "UNIDADES" ? "1" : "0.001"}
-                  value={item.cantidad || ""}
-                  onChange={e => onChange(idx, { cantidad: Number(e.target.value) })} placeholder="0"
+                <NumberInput value={item.cantidad}
+                  onChange={n => onChange(idx, { cantidad: n })}
+                  step={prod.unidad === "UNIDADES" ? "1" : "0.001"}
                   className="w-20 text-sm text-center focus:outline-none bg-transparent font-medium" />
               </div>
               <span className="text-gray-600 text-sm font-medium">{unidadLabel(prod.unidad)}</span>
