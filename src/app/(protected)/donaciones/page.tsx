@@ -52,7 +52,7 @@ interface Donacion {
 interface Filters { page: number; search: string; pais: string; ciudad: string; centroId: string; periodo: string }
 
 const BLANK_ITEM: ItemForm = {
-  productoId: "", cantidad: 0, cantidadUnidades: 0, tamanoUnidad: 0, desglose: false, notas: "",
+  productoId: "", cantidad: 0, cantidadUnidades: 0, tamanoUnidad: 0, desglose: true, notas: "",
 };
 const PERIODOS = [
   { value: "todos",  label: "Todos" },
@@ -198,7 +198,7 @@ function ItemRow({ idx, item, productos, onChange, onRemove, canRemove }: {
   const esVolumen = prod?.unidad === "LITROS" || prod?.unidad === "KG";
 
   const handleProducto = (id: string) =>
-    onChange(idx, { productoId: id, cantidad: 0, cantidadUnidades: 0, tamanoUnidad: 0, desglose: false });
+    onChange(idx, { productoId: id, cantidad: 0, cantidadUnidades: 0, tamanoUnidad: 0, desglose: true });
 
   const handleUnidades = (n: number) => {
     const total = item.tamanoUnidad > 0 ? parseFloat((n * item.tamanoUnidad).toFixed(6)) : 0;
