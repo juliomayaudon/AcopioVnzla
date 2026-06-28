@@ -370,11 +370,16 @@ export default function HomePage() {
         <div className="max-w-2xl mx-auto text-center">
           <h2 className="text-2xl font-bold text-white mb-3">¿Tienes un centro de acopio?</h2>
           <p className="text-white/70 mb-8">
-            Si tu organización está apoyando a Venezuela y quieres usar este sistema, contáctanos para darte acceso.
+            Regístralo tú mismo en minutos y empieza a gestionar tus donaciones. Quedarás como responsable y podrás sumar a tu equipo.
           </p>
-          <Link href="/login" className="inline-flex items-center gap-2 bg-[#00A8E8] text-white font-semibold px-8 py-3.5 rounded-xl hover:bg-[#0090C8] transition-colors">
-            Solicitar acceso <ArrowRight size={16} />
-          </Link>
+          <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
+            <Link href="/registrar-centro" className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-[#00A8E8] text-white font-semibold px-8 py-3.5 rounded-xl hover:bg-[#0090C8] transition-colors">
+              Registra tu centro <ArrowRight size={16} />
+            </Link>
+            <Link href="/como-funciona" className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-white/10 text-white font-semibold px-8 py-3.5 rounded-xl hover:bg-white/20 transition-colors border border-white/20">
+              ¿Cómo funciona?
+            </Link>
+          </div>
         </div>
       </section>
 
