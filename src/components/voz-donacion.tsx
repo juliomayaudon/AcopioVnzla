@@ -144,7 +144,12 @@ export default function VozDonacion({ productos, onAdd }: {
   const recRef = useRef<any>(null);
   const escuchandoRef = useRef(false);
   const prodRef = useRef(productos);
+  const onAddRef = useRef(onAdd);
+  const bufferRef = useRef("");
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const flushRef = useRef<() => void>(() => {});
   useEffect(() => { prodRef.current = productos; }, [productos]);
+  useEffect(() => { onAddRef.current = onAdd; }, [onAdd]);
 
   useEffect(() => {
     const SR = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
@@ -153,23 +158,31 @@ export default function VozDonacion({ productos, onAdd }: {
     rec.lang = "es-ES";
     rec.continuous = true;
     rec.interimResults = true;
+
+    // Procesa la frase completa acumulada (tras una pausa al hablar)
+    const flush = () => {
+      if (timerRef.current) { clearTimeout(timerRef.current); timerRef.current = null; }
+      const frase = bufferRef.current.trim();
+      bufferRef.current = "";
+      setInterim("");
+      if (!frase) return;
+      const r = parseFrase(frase, prodRef.current);
+      if (r.matched && r.item) { onAddRef.current(r.item); setFeedback({ ok: true, msg: r.resumen }); }
+      else setFeedback({ ok: false, msg: `No reconocí: "${r.texto}"` });
+    };
+    flushRef.current = flush;
+
     rec.onresult = (e: any) => {
       let intTxt = "";
       for (let i = e.resultIndex; i < e.results.length; i++) {
         const txt = e.results[i][0].transcript;
-        if (e.results[i].isFinal) {
-          const r = parseFrase(txt, prodRef.current);
-          if (r.matched && r.item) {
-            onAdd(r.item);
-            setFeedback({ ok: true, msg: r.resumen });
-          } else {
-            setFeedback({ ok: false, msg: `No reconocí: "${r.texto}"` });
-          }
-        } else {
-          intTxt += txt;
-        }
+        if (e.results[i].isFinal) bufferRef.current = (bufferRef.current + " " + txt).trim();
+        else intTxt += txt;
       }
-      setInterim(intTxt);
+      setInterim((bufferRef.current + " " + intTxt).trim());
+      // Espera ~1s sin nueva voz → considera la frase terminada y la procesa
+      if (timerRef.current) clearTimeout(timerRef.current);
+      timerRef.current = setTimeout(flush, 1000);
     };
     rec.onerror = (e: any) => {
       if (e.error === "not-allowed" || e.error === "service-not-allowed") {
@@ -184,8 +197,12 @@ export default function VozDonacion({ productos, onAdd }: {
       else setInterim("");
     };
     recRef.current = rec;
-    return () => { escuchandoRef.current = false; try { rec.stop(); } catch {} };
-  }, [onAdd]);
+    return () => {
+      escuchandoRef.current = false;
+      if (timerRef.current) clearTimeout(timerRef.current);
+      try { rec.stop(); } catch {}
+    };
+  }, []);
 
   const toggle = () => {
     if (!recRef.current) return;
@@ -193,7 +210,7 @@ export default function VozDonacion({ productos, onAdd }: {
       escuchandoRef.current = false;
       setEscuchando(false);
       try { recRef.current.stop(); } catch {}
-      setInterim("");
+      flushRef.current();   // procesa lo que haya quedado pendiente
     } else {
       setFeedback(null);
       escuchandoRef.current = true;
