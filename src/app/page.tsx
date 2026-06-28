@@ -150,22 +150,22 @@ export default function HomePage() {
               </div>
             ))}
           </div>
-          <div className="flex flex-col sm:flex-row gap-3 justify-center">
-            <Link href="/registrar-centro" className="inline-flex items-center gap-2 bg-[#00A8E8] text-white font-semibold px-6 py-3 rounded-xl hover:bg-[#0090C8] transition-colors">
+          <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
+            <Link href="/registrar-centro" className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-[#00A8E8] text-white font-semibold px-6 py-3 rounded-xl hover:bg-[#0090C8] transition-colors">
               Registra tu centro <ArrowRight size={16} />
             </Link>
-            <Link href="/registrar-voluntario" className="inline-flex items-center gap-2 bg-white text-[#1B3078] font-semibold px-6 py-3 rounded-xl hover:bg-white/90 transition-colors">
+            <Link href="/registrar-voluntario" className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-white text-[#1B3078] font-semibold px-6 py-3 rounded-xl hover:bg-white/90 transition-colors">
               Únete como voluntario <Users size={16} />
             </Link>
           </div>
-          <div className="flex flex-col sm:flex-row gap-3 justify-center mt-3">
-            <Link href="/como-funciona" className="inline-flex items-center gap-2 text-white/80 font-medium px-4 py-2 rounded-xl hover:text-white transition-colors text-sm">
+          <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 justify-center items-center mt-3">
+            <Link href="/como-funciona" className="inline-flex items-center justify-center gap-2 text-white/80 font-medium px-4 py-2 rounded-xl hover:text-white transition-colors text-sm">
               ¿Cómo funciona? <ArrowRight size={15} />
             </Link>
-            <a href="#centros" className="inline-flex items-center gap-2 text-white/80 font-medium px-4 py-2 rounded-xl hover:text-white transition-colors text-sm">
+            <a href="#centros" className="inline-flex items-center justify-center gap-2 text-white/80 font-medium px-4 py-2 rounded-xl hover:text-white transition-colors text-sm">
               Ver centros <ArrowRight size={15} />
             </a>
-            <Link href="/login" className="inline-flex items-center gap-2 text-white/80 font-medium px-4 py-2 rounded-xl hover:text-white transition-colors text-sm">
+            <Link href="/login" className="inline-flex items-center justify-center gap-2 text-white/80 font-medium px-4 py-2 rounded-xl hover:text-white transition-colors text-sm">
               Acceder al sistema <ExternalLink size={15} />
             </Link>
           </div>
