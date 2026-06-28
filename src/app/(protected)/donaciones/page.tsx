@@ -32,8 +32,8 @@ function formatItemCantidad(item: DonItem) {
   return `${smartNum(cantidad)} ${unidadLabel(p.unidad)}`;
 }
 
-// Comprime la foto en el navegador antes de mandarla a la IA (límite de la API ~180KB)
-async function compressImage(file: File, maxDim = 1400): Promise<string> {
+// Comprime la foto en el navegador antes de mandarla a la IA (límite inline de NVIDIA ~180KB en base64)
+async function compressImage(file: File, maxDim = 1280): Promise<string> {
   const dataUrl: string = await new Promise((res, rej) => {
     const fr = new FileReader();
     fr.onload = () => res(fr.result as string);
@@ -56,9 +56,10 @@ async function compressImage(file: File, maxDim = 1400): Promise<string> {
   ctx.fillStyle = "#fff";
   ctx.fillRect(0, 0, width, height);
   ctx.drawImage(img, 0, 0, width, height);
-  let q = 0.72;
+  // El string base64 (incluido el prefijo data:) debe quedar por debajo del límite inline de NVIDIA
+  let q = 0.7;
   let out = canvas.toDataURL("image/jpeg", q);
-  while (out.length > 230_000 && q > 0.35) { q -= 0.12; out = canvas.toDataURL("image/jpeg", q); }
+  while (out.length > 180_000 && q > 0.3) { q -= 0.1; out = canvas.toDataURL("image/jpeg", q); }
   return out;
 }
 
