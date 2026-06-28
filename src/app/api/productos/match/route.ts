@@ -35,7 +35,7 @@ export async function POST(req: NextRequest) {
   const prompt = `Tienes un catálogo de productos de ayuda humanitaria (id: nombre):
 ${catalogo}
 
-Para cada texto de la lista de abajo, indica el id del producto del catálogo que MEJOR corresponde (considera sinónimos, plurales, diminutivos y errores de escritura en español). Si ninguno corresponde con seguridad, deja el id vacío.
+Para cada texto de la lista de abajo, indica el id del producto del catálogo que corresponde (considera sinónimos, plurales, diminutivos y errores de escritura en español). IMPORTANTE: es MEJOR dejar el id vacío que asignar uno incorrecto. NO asignes un producto solo porque se parezca un poco o sea de la misma categoría; solo asigna si es claramente el mismo producto. Ej: "canguil" es maíz para cotufas, NO es azúcar.
 
 Responde con un objeto JSON por cada texto, con esta forma EXACTA y nada más de texto alrededor:
 {"t":"<texto original tal cual>","id":"<id del catálogo o vacío>"}

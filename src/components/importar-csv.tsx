@@ -2,7 +2,7 @@
 import { useState, useMemo } from "react";
 import {
   X, Upload, ArrowRight, ArrowLeft, Sparkles, Loader2, CheckCircle2,
-  AlertTriangle, FileSpreadsheet,
+  AlertTriangle, FileSpreadsheet, ChevronLeft, ChevronRight,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -152,6 +152,8 @@ export default function ImportarCSV({
   const [cantOverride, setCantOverride] = useState<Record<number, number>>({});
   const [aiMatches, setAiMatches] = useState<Record<string, string>>({});
   const [agrupar, setAgrupar] = useState(false);
+  const [previewPage, setPreviewPage] = useState(1);
+  const [soloSinAsociar, setSoloSinAsociar] = useState(false);
   const [aiLoading, setAiLoading] = useState(false);
   const [importing, setImporting] = useState(false);
   const [error, setError] = useState("");
@@ -324,7 +326,13 @@ export default function ImportarCSV({
   };
 
   const setMap = (key: CampoKey, idx: number) => setMapping((m) => ({ ...m, [key]: idx }));
-  const visibles = rows.slice(0, 100);
+
+  // Filtro + paginación de la vista previa
+  const PER = 100;
+  const filtradas = soloSinAsociar ? rows.filter((r) => !r.productoId) : rows;
+  const totalPaginas = Math.max(1, Math.ceil(filtradas.length / PER));
+  const pagina = Math.min(previewPage, totalPaginas);
+  const visibles = filtradas.slice((pagina - 1) * PER, pagina * PER);
 
   return (
     <div className="fixed inset-0 z-50 flex items-stretch sm:items-center sm:justify-center sm:p-4">
@@ -445,6 +453,14 @@ export default function ImportarCSV({
                     Asociar productos con IA
                   </button>
                 )}
+                {stats.sinProducto > 0 && (
+                  <label className="flex items-center gap-2 text-sm text-gray-600 cursor-pointer">
+                    <input type="checkbox" checked={soloSinAsociar}
+                      onChange={(e) => { setSoloSinAsociar(e.target.checked); setPreviewPage(1); }}
+                      className="accent-[#1B3078]" />
+                    Solo sin asociar
+                  </label>
+                )}
                 <label className="flex items-center gap-2 text-sm text-gray-600 ml-auto cursor-pointer">
                   <input type="checkbox" checked={agrupar} onChange={(e) => setAgrupar(e.target.checked)} className="accent-[#1B3078]" />
                   Agrupar todo en una sola donación
@@ -504,11 +520,26 @@ export default function ImportarCSV({
                     </tbody>
                   </table>
                 </div>
-                {rows.length > visibles.length && (
-                  <p className="text-[11px] text-gray-400 text-center py-2 bg-gray-50 border-t border-gray-100">
-                    Mostrando {visibles.length} de {rows.length} filas (se importarán todas las válidas).
+                <div className="flex items-center justify-between gap-2 px-3 py-2 bg-gray-50 border-t border-gray-100">
+                  <p className="text-[11px] text-gray-400">
+                    {filtradas.length === 0
+                      ? "Sin filas"
+                      : `${(pagina - 1) * PER + 1}–${Math.min(pagina * PER, filtradas.length)} de ${filtradas.length}${soloSinAsociar ? " sin asociar" : " filas"}`}
                   </p>
-                )}
+                  {totalPaginas > 1 && (
+                    <div className="flex items-center gap-1">
+                      <button type="button" onClick={() => setPreviewPage((p) => Math.max(1, p - 1))} disabled={pagina <= 1}
+                        className="p-1 rounded-lg text-gray-400 hover:bg-gray-200 disabled:opacity-30">
+                        <ChevronLeft size={16} />
+                      </button>
+                      <span className="text-xs text-gray-500 px-1">{pagina} / {totalPaginas}</span>
+                      <button type="button" onClick={() => setPreviewPage((p) => Math.min(totalPaginas, p + 1))} disabled={pagina >= totalPaginas}
+                        className="p-1 rounded-lg text-gray-400 hover:bg-gray-200 disabled:opacity-30">
+                        <ChevronRight size={16} />
+                      </button>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           )}

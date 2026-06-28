@@ -114,6 +114,18 @@ async function main() {
     { nombre: "Mezclas para tortas / panqueques", cat: "Alimentos no perecederos", unidad: "KG"   as const },
     { nombre: "Polenta",                      cat: "Alimentos no perecederos", unidad: "KG"       as const },
     { nombre: "Encurtidos en frasco",         cat: "Alimentos no perecederos", unidad: "KG"       as const, tamanoDefault: 0.5 },
+    { nombre: "Canguil / cotufas (maíz)",     cat: "Alimentos no perecederos", unidad: "KG"       as const },
+    { nombre: "Maicena / fécula de maíz",     cat: "Alimentos no perecederos", unidad: "KG"       as const },
+    { nombre: "Colada (bebida en polvo)",     cat: "Alimentos no perecederos", unidad: "KG"       as const },
+    { nombre: "Cebada",                       cat: "Alimentos no perecederos", unidad: "KG"       as const },
+    { nombre: "Panela / papelón",             cat: "Alimentos no perecederos", unidad: "KG"       as const },
+    { nombre: "Harina de plátano",            cat: "Alimentos no perecederos", unidad: "KG"       as const },
+    { nombre: "Harina precocida (Harina PAN)", cat: "Alimentos no perecederos", unidad: "KG"      as const },
+    { nombre: "Maíz enlatado",                cat: "Alimentos no perecederos", unidad: "KG"       as const, tamanoDefault: 0.3 },
+    { nombre: "Frejol negro",                 cat: "Alimentos no perecederos", unidad: "KG"       as const },
+    { nombre: "Leche condensada",             cat: "Alimentos no perecederos", unidad: "LITROS"   as const, tamanoDefault: 0.39 },
+    { nombre: "Durazno en lata",              cat: "Alimentos no perecederos", unidad: "KG"       as const, tamanoDefault: 0.4 },
+    { nombre: "Mantequilla",                  cat: "Alimentos no perecederos", unidad: "KG"       as const, tamanoDefault: 0.5 },
 
     // ── Agua e hidratación ───────────────────────────────────────────
     { nombre: "Agua embotellada",             cat: "Agua e hidratación", unidad: "LITROS"   as const },
@@ -126,6 +138,8 @@ async function main() {
     { nombre: "Polvo para preparar refresco", cat: "Agua e hidratación", unidad: "KG"       as const },
     { nombre: "Bebidas energéticas",          cat: "Agua e hidratación", unidad: "LITROS"   as const },
     { nombre: "Leche vegetal (almendra/soya/avena)", cat: "Agua e hidratación", unidad: "LITROS" as const },
+    { nombre: "Refrescos / gaseosas",         cat: "Agua e hidratación", unidad: "LITROS"   as const },
+    { nombre: "Leche saborizada",             cat: "Agua e hidratación", unidad: "LITROS"   as const },
 
     // ── Medicamentos ─────────────────────────────────────────────────
     { nombre: "Acetaminofén 500mg",           cat: "Medicamentos", unidad: "UNIDADES" as const },
@@ -192,10 +206,15 @@ async function main() {
     // ── Higiene personal ─────────────────────────────────────────────
     { nombre: "Jabón de baño",                cat: "Higiene personal", unidad: "UNIDADES" as const },
     { nombre: "Shampoo",                      cat: "Higiene personal", unidad: "LITROS"   as const },
-    { nombre: "Pasta dental",                 cat: "Higiene personal", unidad: "UNIDADES" as const },
+    { nombre: "Crema dental / pasta dental",  cat: "Higiene personal", unidad: "UNIDADES" as const },
     { nombre: "Cepillo de dientes",           cat: "Higiene personal", unidad: "UNIDADES" as const },
     { nombre: "Papel higiénico (rollo)",      cat: "Higiene personal", unidad: "UNIDADES" as const },
-    { nombre: "Toallitas húmedas",            cat: "Higiene personal", unidad: "UNIDADES" as const },
+    { nombre: "Toallitas / toallas húmedas",  cat: "Higiene personal", unidad: "UNIDADES" as const },
+    { nombre: "Jabón líquido corporal",       cat: "Higiene personal", unidad: "LITROS"   as const },
+    { nombre: "Vaselina",                     cat: "Higiene personal", unidad: "UNIDADES" as const },
+    { nombre: "Tratamiento / mascarilla capilar", cat: "Higiene personal", unidad: "UNIDADES" as const },
+    { nombre: "Splash / colonia corporal",    cat: "Higiene personal", unidad: "UNIDADES" as const },
+    { nombre: "Protectores diarios",          cat: "Higiene personal", unidad: "UNIDADES" as const },
     { nombre: "Toallas sanitarias",           cat: "Higiene personal", unidad: "UNIDADES" as const },
     { nombre: "Pañales adulto",               cat: "Higiene personal", unidad: "UNIDADES" as const },
     { nombre: "Desodorante",                  cat: "Higiene personal", unidad: "UNIDADES" as const },
@@ -254,6 +273,7 @@ async function main() {
     { nombre: "Mordedores",                   cat: "Artículos para bebés", unidad: "UNIDADES" as const },
     { nombre: "Coche / cochecito",            cat: "Artículos para bebés", unidad: "UNIDADES" as const },
     { nombre: "Sonajeros / juguetes bebé",    cat: "Artículos para bebés", unidad: "UNIDADES" as const },
+    { nombre: "Extractor de leche materna",   cat: "Artículos para bebés", unidad: "UNIDADES" as const },
 
     // ── Artículos del hogar ──────────────────────────────────────────
     { nombre: "Cobijas / frazadas",           cat: "Artículos del hogar", unidad: "UNIDADES" as const },
@@ -353,6 +373,9 @@ async function main() {
     { nombre: "Aromatizantes / ambientadores",cat: "Limpieza y desinfección", unidad: "UNIDADES" as const },
     { nombre: "Gel antibacterial",            cat: "Limpieza y desinfección", unidad: "LITROS"   as const },
     { nombre: "Alcohol en gel",               cat: "Limpieza y desinfección", unidad: "LITROS"   as const },
+    { nombre: "Jabón en polvo (lavar ropa)",  cat: "Limpieza y desinfección", unidad: "KG"       as const },
+    { nombre: "Jabón en barra (lavar ropa)",  cat: "Limpieza y desinfección", unidad: "UNIDADES" as const },
+    { nombre: "Servilletas",                  cat: "Limpieza y desinfección", unidad: "UNIDADES" as const },
 
     // ── Alimento para mascotas ───────────────────────────────────────
     { nombre: "Alimento para perros",         cat: "Alimento para mascotas", unidad: "KG"       as const },
@@ -382,6 +405,20 @@ async function main() {
     { nombre: "Paños higiénicos para mascotas (wee-wee pads)", cat: "Artículos para mascotas", unidad: "UNIDADES" as const },
     { nombre: "Toallas para mascotas",        cat: "Artículos para mascotas", unidad: "UNIDADES" as const },
   ];
+
+  // ── Renombrar productos existentes (sin duplicar ni perder inventario) ──
+  const renombrar: Record<string, string> = {
+    "Pasta dental": "Crema dental / pasta dental",
+    "Toallitas húmedas": "Toallitas / toallas húmedas",
+  };
+  for (const [viejo, nuevo] of Object.entries(renombrar)) {
+    const p = await prisma.producto.findFirst({ where: { nombre: viejo } });
+    const yaNuevo = await prisma.producto.findFirst({ where: { nombre: nuevo } });
+    if (p && !yaNuevo) {
+      await prisma.producto.update({ where: { id: p.id }, data: { nombre: nuevo } });
+      console.log(`  ↻ ${viejo} → ${nuevo}`);
+    }
+  }
 
   for (const p of productos) {
     const tamanoDefault = ("tamanoDefault" in p ? (p as { tamanoDefault?: number }).tamanoDefault : null) ?? null;
