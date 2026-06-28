@@ -36,6 +36,9 @@ const GUESS: Record<CampoKey, string[]> = {
 const norm = (s: string) =>
   (s || "").toLowerCase().normalize("NFD").replace(/\p{Diacritic}/gu, "").trim();
 
+const uLabel = (u: string) => (u === "KG" ? "kg" : u === "LITROS" ? "L" : "u");
+const fmt = (n: number) => (n % 1 === 0 ? String(n) : parseFloat(n.toFixed(3)).toString().replace(".", ","));
+
 // ── Parsers ────────────────────────────────────────────────────────────────────
 function parseCSV(text: string): string[][] {
   // Detecta separador (coma o punto y coma — Excel en español usa ;)
@@ -79,9 +82,23 @@ function parseUnidad(s: string): string | null {
   const t = norm(s);
   if (!t) return null;
   if (/\b(kg|kilo|kilos|kilogramo|kilogramos)\b/.test(t) || t === "k") return "KG";
+  if (/\b(g|gr|grs|gramo|gramos)\b/.test(t)) return "KG";
   if (/\b(l|lt|lts|litro|litros)\b/.test(t)) return "LITROS";
+  if (/\b(ml|mililitro|mililitros|cc)\b/.test(t)) return "LITROS";
   if (/(unid|unidad|pieza|pza|paquete|caja|lata|bolsa|botella|saco|bulto)/.test(t)) return "UNIDADES";
   return null;
+}
+
+// Factor para convertir el peso/volumen escrito en la celda a la unidad base del producto
+// (kg o litros). Ej: "500 g" → 0.5 ; "200 ml" → 0.2 ; "1 kg" → 1. Sin unidad: se asume base.
+function factorPeso(s: string): number {
+  const t = norm(s);
+  if (/\b(kg|kilo|kilos|kilogramo|kilogramos)\b/.test(t)) return 1;
+  if (/\b(mg|miligramo|miligramos)\b/.test(t)) return 0.000001;
+  if (/\b(g|gr|grs|gramo|gramos)\b/.test(t)) return 0.001;
+  if (/\b(l|lt|lts|litro|litros)\b/.test(t)) return 1;
+  if (/\b(ml|mililitro|mililitros|cc)\b/.test(t)) return 0.001;
+  return 1;
 }
 
 function parseFecha(s: string): string | null {
@@ -175,7 +192,8 @@ export default function ImportarCSV({
     return rawRows.map((r, idx) => {
       const txt = (r[mapping.producto] ?? "").trim();
       const cant = parseNum(mapping.cantidad >= 0 ? r[mapping.cantidad] ?? "" : "");
-      const peso = parseNum(mapping.peso >= 0 ? r[mapping.peso] ?? "" : "");
+      const pesoStr = mapping.peso >= 0 ? r[mapping.peso] ?? "" : "";
+      const peso = parseNum(pesoStr) * factorPeso(pesoStr); // convertido a kg / L
       const unidadStr = mapping.unidad >= 0 ? r[mapping.unidad] ?? "" : "";
       const fechaStr = mapping.fecha >= 0 ? r[mapping.fecha] ?? "" : "";
       const donante = mapping.donante >= 0 ? (r[mapping.donante] ?? "").trim() : "";
@@ -434,12 +452,16 @@ export default function ImportarCSV({
                           </td>
                           <td className="px-3 py-2 text-right whitespace-nowrap align-top">
                             {r.cantidad > 0 ? (
-                              <span className="font-semibold text-gray-800">
-                                {r.cantidad}{" "}
-                                <span className="text-xs text-gray-400">
-                                  {r.unidad === "KG" ? "kg" : r.unidad === "LITROS" ? "L" : "u"}
+                              <div>
+                                <span className="font-semibold text-gray-800">
+                                  {fmt(r.cantidad)} <span className="text-xs text-gray-400">{uLabel(r.unidad)}</span>
                                 </span>
-                              </span>
+                                {r.cantidadUnidades ? (
+                                  <p className="text-[11px] text-gray-400">
+                                    {fmt(r.cantidadUnidades)} × {fmt(r.cantidad / r.cantidadUnidades)} {uLabel(r.unidad)}
+                                  </p>
+                                ) : null}
+                              </div>
                             ) : <span className="text-amber-600 text-xs flex items-center gap-1 justify-end"><AlertTriangle size={12} /> sin cant.</span>}
                           </td>
                         </tr>
