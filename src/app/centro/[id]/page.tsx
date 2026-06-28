@@ -109,7 +109,7 @@ export default function CentroPublicoPage({ params }: { params: Promise<{ id: st
           <ArrowLeft size={16} /> Inicio
         </Link>
         <div className="ml-auto">
-          <img src="/Comando_Con_Venezuela_logo.svg" alt="ConVzla" style={{ height: 26, width: "auto" }} />
+          <img src="/Operacion_transparente.svg" alt="Operación Todos con Venezuela" style={{ height: 34, width: "auto" }} />
         </div>
       </nav>
 

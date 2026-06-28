@@ -36,7 +36,7 @@ export default function LoginPage() {
       {/* Panel izquierdo — branding */}
       <div className="hidden lg:flex flex-col justify-between w-1/2 bg-[#1B3078] p-12">
         <div>
-          <img src="/Comando_Con_Venezuela_logo.svg" alt="Comando Con Venezuela" className="w-56 brightness-0 invert" />
+          <img src="/Operacion_blanco.svg" alt="Operación Todos con Venezuela" className="h-24 w-auto" />
         </div>
         <div className="space-y-4">
           <p className="text-white text-xl font-semibold leading-snug">

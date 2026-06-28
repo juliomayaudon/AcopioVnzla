@@ -21,9 +21,9 @@ export function Header({ onMenuClick }: HeaderProps) {
 
       {/* Logo izquierda */}
       <img
-        src="/Comando_Con_Venezuela_logo.svg"
-        alt="Comando Con Venezuela"
-        style={{ height: "30px", width: "auto" }}
+        src="/Operacion_transparente.svg"
+        alt="Operación Todos con Venezuela"
+        style={{ height: "36px", width: "auto" }}
       />
 
       <div className="flex-1" />

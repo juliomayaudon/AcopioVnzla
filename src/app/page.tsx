@@ -84,7 +84,7 @@ export default function HomePage() {
 
       {/* ── Navbar ── */}
       <nav className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur border-b border-gray-100 h-14 flex items-center px-6 lg:px-12">
-        <img src="/Comando_Con_Venezuela_logo.svg" alt="ConVzla" style={{ height: 30, width: "auto" }} />
+        <img src="/Operacion_transparente.svg" alt="Operación Todos con Venezuela" style={{ height: 38, width: "auto" }} />
         <div className="ml-auto flex items-center gap-6">
           <a href="#centros" className="hidden sm:block text-sm text-gray-600 hover:text-[#1B3078] font-medium">Centros</a>
           <a href="#mapa"    className="hidden sm:block text-sm text-gray-600 hover:text-[#1B3078] font-medium">Mapa</a>
@@ -364,10 +364,10 @@ export default function HomePage() {
       {/* ── Footer ── */}
       <footer className="bg-[#0f1f5c] py-8 px-6">
         <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
-          <img src="/Comando_Con_Venezuela_logo.svg" alt="ConVzla"
-            className="brightness-0 invert" style={{ height: 28, width: "auto" }} />
+          <img src="/Operacion_blanco.svg" alt="Operación Todos con Venezuela"
+            style={{ height: 40, width: "auto" }} />
           <p className="text-white/40 text-xs text-center">
-            Sistema de Gestión de Centros de Acopio · Comando Con Venezuela · {new Date().getFullYear()}
+            Sistema de Gestión de Centros de Acopio · Operación Todos con Venezuela · {new Date().getFullYear()}
           </p>
           <Link href="/login" className="text-[#00A8E8] text-sm font-medium hover:underline">
             Acceso voluntarios →
