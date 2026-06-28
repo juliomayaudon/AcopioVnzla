@@ -6,6 +6,8 @@ const nextConfig: NextConfig = {
   // versión nueva al instante tras un deploy), mientras que los recursos con
   // hash en el nombre (JS/CSS) sí se cachean a largo plazo.
   async headers() {
+    // Solo en producción: en desarrollo interfiere con el hot-reload (HMR).
+    if (process.env.NODE_ENV !== "production") return [];
     return [
       {
         source: "/:path*",
