@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { formatDate } from "@/lib/utils";
 import { puedePortalAdmin } from "@/lib/permisos";
 import ImportarCSV from "@/components/importar-csv";
+import VozDonacion from "@/components/voz-donacion";
 
 // ── helpers ───────────────────────────────────────────────────────────────────
 function unidadLabel(u?: string) {
@@ -845,6 +846,16 @@ export default function DonacionesPage() {
                     <label className="text-xs font-bold text-gray-700 uppercase tracking-widest">Productos donados</label>
                     <span className="text-xs text-gray-400">{validItems.length} listo{validItems.length !== 1 ? "s" : ""}</span>
                   </div>
+
+                  {/* Dictado por voz */}
+                  <VozDonacion
+                    productos={productos}
+                    onAdd={(it) => setItems(prev => {
+                      const sinVacios = prev.filter(p => p.productoId || p.cantidad > 0);
+                      return [it, ...sinVacios];
+                    })}
+                  />
+
                   <button type="button" onClick={() => setItems(p => [{ ...BLANK_ITEM }, ...p])}
                     className="mb-2.5 w-full flex items-center justify-center gap-2 py-2.5 text-sm text-[#1B3078] font-semibold border-2 border-dashed border-[#1B3078]/25 rounded-xl hover:border-[#1B3078]/40 hover:bg-[#EEF1FB] transition-colors">
                     <Plus size={16} /> Agregar otro producto
