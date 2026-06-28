@@ -6,6 +6,7 @@ import {
   Plus, PackagePlus, Trash2, X, Hash, Layers, Search,
   ChevronLeft, ChevronRight, SlidersHorizontal, User,
   Building2, Calendar, FileText, Package, ChevronDown, ChevronUp, Eye, Download,
+  ScanLine, Sparkles, Loader2,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -31,11 +32,42 @@ function formatItemCantidad(item: DonItem) {
   return `${smartNum(cantidad)} ${unidadLabel(p.unidad)}`;
 }
 
+// Comprime la foto en el navegador antes de mandarla a la IA (límite de la API ~180KB)
+async function compressImage(file: File, maxDim = 1400): Promise<string> {
+  const dataUrl: string = await new Promise((res, rej) => {
+    const fr = new FileReader();
+    fr.onload = () => res(fr.result as string);
+    fr.onerror = rej;
+    fr.readAsDataURL(file);
+  });
+  const img: HTMLImageElement = await new Promise((res, rej) => {
+    const i = new Image();
+    i.onload = () => res(i);
+    i.onerror = rej;
+    i.src = dataUrl;
+  });
+  let { width, height } = img;
+  if (width >= height && width > maxDim) { height = Math.round((height * maxDim) / width); width = maxDim; }
+  else if (height > width && height > maxDim) { width = Math.round((width * maxDim) / height); height = maxDim; }
+  const canvas = document.createElement("canvas");
+  canvas.width = width; canvas.height = height;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return dataUrl;
+  ctx.fillStyle = "#fff";
+  ctx.fillRect(0, 0, width, height);
+  ctx.drawImage(img, 0, 0, width, height);
+  let q = 0.72;
+  let out = canvas.toDataURL("image/jpeg", q);
+  while (out.length > 230_000 && q > 0.35) { q -= 0.12; out = canvas.toDataURL("image/jpeg", q); }
+  return out;
+}
+
 // ── types ─────────────────────────────────────────────────────────────────────
 interface Producto { id: string; nombre: string; unidad: string; tamanoDefault: number | null; categoria: { nombre: string } }
 interface ItemForm {
   productoId: string; cantidad: number; cantidadUnidades: number;
   tamanoUnidad: number; desglose: boolean; notas: string;
+  textoIA?: string;
 }
 interface DonItem {
   id: string; cantidad: number; cantidadUnidades?: number | null; notas?: string | null;
@@ -231,6 +263,14 @@ function ItemRow({ idx, item, productos, onChange, onRemove, canRemove }: {
           </button>
         )}
       </div>
+
+      {item.textoIA && (
+        <div className={`flex items-start gap-1.5 text-[11px] rounded-lg px-2 py-1 border ${
+          item.productoId ? "text-gray-500 bg-gray-50 border-gray-100" : "text-amber-700 bg-amber-50 border-amber-100"}`}>
+          <Sparkles size={12} className="mt-0.5 shrink-0" />
+          <span>Leído de la hoja: "{item.textoIA}"{!item.productoId && " — selecciona el producto correcto"}</span>
+        </div>
+      )}
 
       {prod && (
         <div className="space-y-2">
@@ -521,6 +561,9 @@ export default function DonacionesPage() {
   const [notas, setNotas]                   = useState("");
   const [centroAcopioId, setCentroAcopioId] = useState("");
   const [items, setItems] = useState<ItemForm[]>([{ ...BLANK_ITEM }]);
+  const fileRef = useRef<HTMLInputElement>(null);
+  const [scanning, setScanning]   = useState(false);
+  const [scanError, setScanError] = useState("");
 
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const prevSearch  = useRef(filters.search);
@@ -589,7 +632,44 @@ export default function DonacionesPage() {
 
   const openModal = () => {
     setDonante(""); setNacionalidad(""); setNotas(""); setCentroAcopioId("");
-    setItems([{ ...BLANK_ITEM }]); setModal(true);
+    setItems([{ ...BLANK_ITEM }]); setScanError(""); setModal(true);
+  };
+
+  // Escanear hoja con la cámara → IA lee los productos y precarga los renglones
+  const handleScan = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    setScanError(""); setScanning(true);
+    try {
+      const imageBase64 = await compressImage(file);
+      const res = await fetch("/api/donaciones/escanear", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ imageBase64 }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) { setScanError(data.error || "No se pudo leer la imagen."); return; }
+      const detectados: ItemForm[] = (data.items || []).map((it: any) => {
+        const esVolumen   = it.unidad === "KG" || it.unidad === "LITROS";
+        const conDesglose = esVolumen && it.cantidadUnidades > 0 && it.tamano > 0;
+        return {
+          productoId:       it.productoId || "",
+          cantidad:         Number(it.cantidadTotal) || 0,
+          cantidadUnidades: conDesglose ? it.cantidadUnidades : 0,
+          tamanoUnidad:     conDesglose ? it.tamano : 0,
+          desglose:         conDesglose,
+          notas:            "",
+          textoIA:          it.texto || "",
+        };
+      });
+      if (!detectados.length) { setScanError("No se detectaron productos en la imagen. Intenta con una foto más nítida."); return; }
+      setItems(detectados);
+    } catch {
+      setScanError("No se pudo procesar la imagen.");
+    } finally {
+      setScanning(false);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -839,6 +919,21 @@ export default function DonacionesPage() {
                     <label className="text-xs font-bold text-gray-700 uppercase tracking-widest">Productos donados</label>
                     <span className="text-xs text-gray-400">{validItems.length} listo{validItems.length !== 1 ? "s" : ""}</span>
                   </div>
+
+                  {/* Escanear hoja con IA */}
+                  <input ref={fileRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={handleScan} />
+                  <button type="button" onClick={() => fileRef.current?.click()} disabled={scanning}
+                    className="mb-1.5 w-full flex items-center justify-center gap-2 py-2.5 text-sm font-semibold text-white rounded-xl transition-opacity hover:opacity-95 disabled:opacity-60"
+                    style={{ background: "linear-gradient(90deg, #1B3078 0%, #00A8E8 100%)" }}>
+                    {scanning
+                      ? <><Loader2 size={15} className="animate-spin" /> Leyendo la hoja con IA...</>
+                      : <><ScanLine size={15} /> Escanear hoja con la cámara (IA)</>}
+                  </button>
+                  <p className="text-[11px] text-gray-400 mb-2 text-center">
+                    Toma una foto de la lista escrita a mano y la IA llenará los productos. Revísalos antes de guardar.
+                  </p>
+                  {scanError && <p className="text-xs text-red-600 bg-red-50 rounded-lg px-3 py-2 mb-2">{scanError}</p>}
+
                   <button type="button" onClick={() => setItems(p => [{ ...BLANK_ITEM }, ...p])}
                     className="mb-2 w-full flex items-center justify-center gap-2 py-2 text-sm text-[#1B3078] font-medium border-2 border-dashed border-[#1B3078]/20 rounded-xl hover:border-[#1B3078]/40 hover:bg-[#EEF1FB] transition-colors">
                     <Plus size={15} /> Agregar otro producto
