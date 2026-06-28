@@ -14,6 +14,19 @@ const MapView = dynamic(() => import("@/components/map-view"), {
   ),
 });
 
+// Formato compacto: 523 · 1.45K · 50.2K · 1.45M
+function formatCompacto(n: number): string {
+  const fmt = (v: number, unit: string) => {
+    const d = v >= 100 ? 0 : v >= 10 ? 1 : 2;
+    let s = v.toFixed(d);
+    if (s.includes(".")) s = s.replace(/0+$/, "").replace(/\.$/, "");
+    return s + unit;
+  };
+  if (n >= 1e6) return fmt(n / 1e6, "M");
+  if (n >= 1e3) return fmt(n / 1e3, "K");
+  return Math.round(n).toString();
+}
+
 function Counter({ target }: { target: number }) {
   const [val, setVal] = useState(0);
   const done = useRef(false);
@@ -29,7 +42,7 @@ function Counter({ target }: { target: number }) {
     }, duration / steps);
     return () => clearInterval(t);
   }, [target]);
-  return <span>{val.toLocaleString()}</span>;
+  return <span>{formatCompacto(val)}</span>;
 }
 
 interface Centro {

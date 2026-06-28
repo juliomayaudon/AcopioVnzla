@@ -218,7 +218,7 @@ async function main() {
     { nombre: "Toallas sanitarias",           cat: "Higiene personal", unidad: "UNIDADES" as const },
     { nombre: "Pañales adulto",               cat: "Higiene personal", unidad: "UNIDADES" as const },
     { nombre: "Desodorante",                  cat: "Higiene personal", unidad: "UNIDADES" as const },
-    { nombre: "Máquinas de afeitar",          cat: "Higiene personal", unidad: "UNIDADES" as const },
+    { nombre: "Afeitadora",                   cat: "Higiene personal", unidad: "UNIDADES" as const },
     { nombre: "Enjuague bucal",               cat: "Higiene personal", unidad: "UNIDADES" as const },
     { nombre: "Acondicionador",               cat: "Higiene personal", unidad: "LITROS"   as const },
     { nombre: "Hilo dental",                  cat: "Higiene personal", unidad: "UNIDADES" as const },
@@ -333,6 +333,7 @@ async function main() {
     { nombre: "Pilas tipo botón",             cat: "Herramientas y equipos", unidad: "UNIDADES" as const },
     { nombre: "Power banks / baterías externas", cat: "Herramientas y equipos", unidad: "UNIDADES" as const },
     { nombre: "Generadores eléctricos",       cat: "Herramientas y equipos", unidad: "UNIDADES" as const },
+    { nombre: "Planta eléctrica",             cat: "Herramientas y equipos", unidad: "UNIDADES" as const },
     { nombre: "Extensiones / multitomas",     cat: "Herramientas y equipos", unidad: "UNIDADES" as const },
     { nombre: "Bombillos / focos LED",        cat: "Herramientas y equipos", unidad: "UNIDADES" as const },
     { nombre: "Radios a pilas",               cat: "Herramientas y equipos", unidad: "UNIDADES" as const },
@@ -410,6 +411,7 @@ async function main() {
   const renombrar: Record<string, string> = {
     "Pasta dental": "Crema dental / pasta dental",
     "Toallitas húmedas": "Toallitas / toallas húmedas",
+    "Máquinas de afeitar": "Afeitadora",
   };
   for (const [viejo, nuevo] of Object.entries(renombrar)) {
     const p = await prisma.producto.findFirst({ where: { nombre: viejo } });
