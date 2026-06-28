@@ -55,13 +55,93 @@ const CONTADOR = /^(unidad|unidades|lata|latas|paquete|paquetes|caja|cajas|bolsa
 const FILLER = new Set(["de", "del", "la", "el", "los", "las", "y", "con"]);
 const esUnidad = (u: string) => PESO[u] != null || CONTADOR.test(u);
 
+// Palabras sueltas comunes → producto preferido (norm sin acentos).
+// Cuando el usuario dice exactamente UNA de estas palabras, gana este producto
+// aunque otros productos del catálogo también contengan la palabra.
+const ALIAS_COMUNES: Record<string, string> = {
+  pasta: "Pasta / fideos", fideos: "Pasta / fideos",
+  leche: "Leche en polvo",
+  arroz: "Arroz", avena: "Avena", azucar: "Azúcar", sal: "Sal", aceite: "Aceite vegetal",
+  agua: "Agua embotellada", cafe: "Café soluble / instantáneo",
+  atun: "Atún en lata", sardina: "Sardinas en lata", sardinas: "Sardinas en lata",
+  pollo: "Pollo enlatado", carne: "Carne enlatada (corned beef)",
+  caraotas: "Caraotas negras", frijoles: "Frijoles", lentejas: "Lentejas",
+  garbanzos: "Garbanzos", quinua: "Quinua", maiz: "Maíz en grano",
+  harina: "Harina de maíz",
+  galletas: "Galletas / crackers", mani: "Maní / frutos secos",
+  mermelada: "Mermelada", miel: "Miel", vinagre: "Vinagre", mayonesa: "Mayonesa",
+  tomate: "Salsa de tomate",
+  jabon: "Jabón de baño", shampoo: "Shampoo", papel: "Papel higiénico (rollo)",
+  detergente: "Detergente en polvo", cloro: "Cloro / lejía",
+  panales: "Pañales adulto", panal: "Pañales adulto",
+  gasas: "Gasas estériles", alcohol: "Alcohol antiséptico",
+};
+
+// Tokens que indican que un producto NO es básico (penaliza si la frase corta no los menciona).
+// Ej.: "pasta" no debe matchear "Pasta dental"; "leche" no debe matchear "Extractor de leche materna".
+const TOKENS_SECUNDARIOS = new Set([
+  "dental", "bucal", "afeitar", "afeitadora",
+  "extractor", "materna",
+  "para", "premios", "snacks",
+  "cachorros", "perros", "gatos", "aves", "peces", "roedores", "mascotas",
+  "bebe", "infantil",
+]);
+
 function fuzzyProducto(texto: string, productos: Prod[]): Prod | null {
   const t = norm(texto);
   if (!t) return null;
+
+  // 0) Match exacto del nombre del producto
   let p = productos.find((x) => norm(x.nombre) === t);
   if (p) return p;
-  p = productos.find((x) => norm(x.nombre).includes(t) || t.includes(norm(x.nombre)));
+
+  // 1) Alias: si el usuario dijo exactamente una palabra "común", preferir el producto fijado
+  if (ALIAS_COMUNES[t]) {
+    const target = norm(ALIAS_COMUNES[t]);
+    p = productos.find((x) => norm(x.nombre) === target);
+    if (p) return p;
+  }
+
+  // 2) Nombre del producto empieza con la frase del usuario (boundary)
+  //    "leche" → "Leche en polvo" (sí), pero NO "Extractor de leche materna" (no empieza)
+  const tokensFrase = t.split(/\s+/);
+  const fraseUnaPalabra = tokensFrase.length === 1;
+  const candidatosInicio = productos.filter((x) => {
+    const nx = norm(x.nombre);
+    return nx === t || nx.startsWith(t + " ") || nx.startsWith(t + "/");
+  });
+  if (candidatosInicio.length) {
+    // Si la frase es 1 palabra, descartar productos con tokens "secundarios" en el nombre.
+    const principales = fraseUnaPalabra
+      ? candidatosInicio.filter((x) => {
+        const tks = norm(x.nombre).split(/[\s/()]+/).filter(Boolean);
+        return !tks.some((tok) => TOKENS_SECUNDARIOS.has(tok));
+      })
+      : candidatosInicio;
+    const pool = principales.length ? principales : candidatosInicio;
+    // Preferir el de nombre más corto (suele ser el "básico")
+    return pool.sort((a, b) => a.nombre.length - b.nombre.length)[0];
+  }
+
+  // 3) La frase del usuario contiene el nombre del producto entero
+  p = productos.find((x) => t.includes(norm(x.nombre)));
   if (p) return p;
+
+  // 4) Contains genérico (cualquier posición), con preferencia por nombres cortos
+  //    y descarte de "secundarios" cuando la frase es de 1 palabra.
+  const contiene = productos.filter((x) => norm(x.nombre).includes(t));
+  if (contiene.length) {
+    const principales = fraseUnaPalabra
+      ? contiene.filter((x) => {
+        const tks = norm(x.nombre).split(/[\s/()]+/).filter(Boolean);
+        return !tks.some((tok) => TOKENS_SECUNDARIOS.has(tok));
+      })
+      : contiene;
+    const pool = principales.length ? principales : contiene;
+    return pool.sort((a, b) => a.nombre.length - b.nombre.length)[0];
+  }
+
+  // 5) Token scoring (último recurso)
   const tokens = t.split(/\s+/).filter((x) => x.length > 2);
   let best: Prod | null = null, score = 0;
   for (const x of productos) {
