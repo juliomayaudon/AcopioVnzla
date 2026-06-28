@@ -6,7 +6,7 @@ import {
   Plus, PackagePlus, Trash2, X, Hash, Layers, Search,
   ChevronLeft, ChevronRight, SlidersHorizontal, User,
   Building2, Calendar, FileText, Package, ChevronDown, ChevronUp, Eye, Download,
-  ScanLine, Sparkles, Loader2,
+  Check,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -32,43 +32,11 @@ function formatItemCantidad(item: DonItem) {
   return `${smartNum(cantidad)} ${unidadLabel(p.unidad)}`;
 }
 
-// Comprime la foto en el navegador antes de mandarla a la IA (límite inline de NVIDIA ~180KB en base64)
-async function compressImage(file: File, maxDim = 1280): Promise<string> {
-  const dataUrl: string = await new Promise((res, rej) => {
-    const fr = new FileReader();
-    fr.onload = () => res(fr.result as string);
-    fr.onerror = rej;
-    fr.readAsDataURL(file);
-  });
-  const img: HTMLImageElement = await new Promise((res, rej) => {
-    const i = new Image();
-    i.onload = () => res(i);
-    i.onerror = rej;
-    i.src = dataUrl;
-  });
-  let { width, height } = img;
-  if (width >= height && width > maxDim) { height = Math.round((height * maxDim) / width); width = maxDim; }
-  else if (height > width && height > maxDim) { width = Math.round((width * maxDim) / height); height = maxDim; }
-  const canvas = document.createElement("canvas");
-  canvas.width = width; canvas.height = height;
-  const ctx = canvas.getContext("2d");
-  if (!ctx) return dataUrl;
-  ctx.fillStyle = "#fff";
-  ctx.fillRect(0, 0, width, height);
-  ctx.drawImage(img, 0, 0, width, height);
-  // El string base64 (incluido el prefijo data:) debe quedar por debajo del límite inline de NVIDIA
-  let q = 0.7;
-  let out = canvas.toDataURL("image/jpeg", q);
-  while (out.length > 180_000 && q > 0.3) { q -= 0.1; out = canvas.toDataURL("image/jpeg", q); }
-  return out;
-}
-
 // ── types ─────────────────────────────────────────────────────────────────────
 interface Producto { id: string; nombre: string; unidad: string; tamanoDefault: number | null; categoria: { nombre: string } }
 interface ItemForm {
   productoId: string; cantidad: number; cantidadUnidades: number;
   tamanoUnidad: number; desglose: boolean; notas: string;
-  textoIA?: string;
 }
 interface DonItem {
   id: string; cantidad: number; cantidadUnidades?: number | null; notas?: string | null;
@@ -99,114 +67,109 @@ const NACIONALIDADES = [
   "Estadounidense", "Española", "Italiana", "Portuguesa", "Otra",
 ];
 
-// ── ProductoCombobox ──────────────────────────────────────────────────────────
-function ProductoCombobox({ value, productos, onChange }: {
+// ── ProductoPicker ────────────────────────────────────────────────────────────
+// Selector en overlay: pantalla completa en móvil, diálogo centrado en escritorio.
+// Evita que el teclado tape la lista (el buscador queda arriba y la lista llena la pantalla).
+function ProductoPicker({ value, productos, onChange }: {
   value: string; productos: Producto[]; onChange: (id: string) => void;
 }) {
   const [open, setOpen]     = useState(false);
   const [search, setSearch] = useState("");
-  const [pos, setPos]       = useState({ top: 0, left: 0, width: 0 });
-  const btnRef   = useRef<HTMLButtonElement>(null);
-  const dropRef  = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const selected   = productos.find(p => p.id === value);
   const categorias = useMemo(() => [...new Set(productos.map(p => p.categoria.nombre))].sort(), [productos]);
   const norm = (s: string) => s.toLowerCase().normalize("NFD").replace(/\p{Diacritic}/gu, "");
-  const q          = norm(search.trim());
-  const filtered   = q
+  const q        = norm(search.trim());
+  const filtered = q
     ? productos.filter(p => norm(p.nombre).includes(q) || norm(p.categoria.nombre).includes(q))
     : productos;
 
-  const openDropdown = () => {
-    if (btnRef.current) {
-      const r = btnRef.current.getBoundingClientRect();
-      const dropdownH = 340;
-      const spaceBelow = window.innerHeight - r.bottom;
-      const spaceAbove = r.top;
-      const above = spaceBelow < dropdownH && spaceAbove > spaceBelow;
-      const top = above ? Math.max(8, r.top - dropdownH - 4) : r.bottom + 4;
-      setPos({ top, left: r.left, width: r.width });
-    }
-    setOpen(true);
-    setTimeout(() => inputRef.current?.focus(), 30);
-  };
-
   useEffect(() => {
-    if (!open) return;
-    const h = (e: MouseEvent) => {
-      if (!btnRef.current?.contains(e.target as Node) && !dropRef.current?.contains(e.target as Node)) {
-        setOpen(false); setSearch("");
-      }
-    };
-    document.addEventListener("mousedown", h);
-    return () => document.removeEventListener("mousedown", h);
+    if (open) { setTimeout(() => inputRef.current?.focus(), 60); }
+    else { setSearch(""); }
   }, [open]);
 
-  const handleSelect = (id: string) => { onChange(id); setOpen(false); setSearch(""); };
+  // Bloquea el scroll del fondo mientras el selector está abierto
+  useEffect(() => {
+    if (!open) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => { document.body.style.overflow = prev; };
+  }, [open]);
 
-  const dropdown = open ? (
-    <div ref={dropRef}
-      style={{ position: "fixed", top: pos.top, left: pos.left, width: pos.width, zIndex: 9999 }}
-      className="bg-white border border-gray-200 rounded-xl shadow-xl overflow-hidden">
-      <div className="p-2 border-b border-gray-100">
-        <div className="relative">
-          <Search size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
-          <input ref={inputRef} type="text" value={search} onChange={e => setSearch(e.target.value)}
-            placeholder="Buscar producto o categoría..."
-            className="w-full pl-8 pr-3 py-1.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1B3078]/20 focus:border-[#1B3078]" />
+  const pick = (id: string) => { onChange(id); setOpen(false); };
+
+  const overlay = open ? (
+    <div className="fixed inset-0 z-[100] flex flex-col bg-white sm:items-center sm:justify-center sm:bg-black/40 sm:p-4">
+      <div className="flex flex-col w-full h-full bg-white overflow-hidden sm:h-auto sm:max-h-[80vh] sm:max-w-md sm:rounded-2xl sm:shadow-2xl">
+        {/* Buscador fijo arriba */}
+        <div className="flex items-center gap-2 px-4 py-3 border-b border-gray-100 shrink-0">
+          <div className="relative flex-1">
+            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+            <input ref={inputRef} type="text" value={search} onChange={e => setSearch(e.target.value)}
+              placeholder="Buscar producto..."
+              className="w-full pl-9 pr-3 py-2.5 text-base border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#1B3078]/20 focus:border-[#1B3078]" />
+          </div>
+          <button type="button" onClick={() => setOpen(false)}
+            className="p-2 rounded-lg hover:bg-gray-100 text-gray-500 shrink-0">
+            <X size={20} />
+          </button>
         </div>
-      </div>
-      <div className="max-h-60 overflow-y-auto">
-        {q ? (
-          filtered.length === 0
-            ? <p className="text-xs text-gray-400 text-center py-5">Sin resultados para "{search}"</p>
-            : filtered.map(p => (
-              <button key={p.id} type="button" onClick={() => handleSelect(p.id)}
-                className={`w-full text-left px-3 py-2 text-sm flex items-center justify-between gap-3 hover:bg-[#EEF1FB] transition-colors ${p.id === value ? "bg-[#EEF1FB] text-[#1B3078] font-medium" : ""}`}>
-                <span>{p.nombre}</span>
-                <span className="text-xs text-gray-400 shrink-0">{p.categoria.nombre}</span>
-              </button>
-            ))
-        ) : (
-          categorias.map(cat => {
-            const prods = filtered.filter(p => p.categoria.nombre === cat);
-            if (!prods.length) return null;
-            return (
-              <div key={cat}>
-                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest px-3 py-1.5 bg-gray-50 sticky top-0">{cat}</p>
-                {prods.map(p => (
-                  <button key={p.id} type="button" onClick={() => handleSelect(p.id)}
-                    className={`w-full text-left px-3 py-2 text-sm hover:bg-[#EEF1FB] transition-colors ${p.id === value ? "bg-[#EEF1FB] text-[#1B3078] font-medium" : ""}`}>
-                    {p.nombre}
-                  </button>
-                ))}
-              </div>
-            );
-          })
-        )}
+        {/* Lista (llena la pantalla, queda por encima del teclado) */}
+        <div className="flex-1 overflow-y-auto overscroll-contain">
+          {q ? (
+            filtered.length === 0
+              ? <p className="text-sm text-gray-400 text-center py-10">Sin resultados para "{search}"</p>
+              : filtered.map(p => (
+                <button key={p.id} type="button" onClick={() => pick(p.id)}
+                  className={`w-full text-left px-4 py-3.5 flex items-center justify-between gap-3 border-b border-gray-50 active:bg-[#EEF1FB] ${p.id === value ? "bg-[#EEF1FB]" : ""}`}>
+                  <span className="text-[15px] text-gray-800">{p.nombre}</span>
+                  <span className="text-xs text-gray-400 shrink-0">{p.categoria.nombre}</span>
+                </button>
+              ))
+          ) : (
+            categorias.map(cat => {
+              const prods = filtered.filter(p => p.categoria.nombre === cat);
+              if (!prods.length) return null;
+              return (
+                <div key={cat}>
+                  <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest px-4 py-2 bg-gray-50 sticky top-0">{cat}</p>
+                  {prods.map(p => (
+                    <button key={p.id} type="button" onClick={() => pick(p.id)}
+                      className={`w-full text-left px-4 py-3.5 flex items-center justify-between gap-2 border-b border-gray-50 active:bg-[#EEF1FB] ${p.id === value ? "bg-[#EEF1FB] text-[#1B3078] font-medium" : "text-gray-800"}`}>
+                      <span className="text-[15px]">{p.nombre}</span>
+                      {p.id === value && <Check size={16} className="text-[#1B3078] shrink-0" />}
+                    </button>
+                  ))}
+                </div>
+              );
+            })
+          )}
+        </div>
       </div>
     </div>
   ) : null;
 
   return (
     <div className="flex-1 min-w-0">
-      <button ref={btnRef} type="button" onClick={openDropdown}
-        className="w-full text-left text-sm border border-gray-200 rounded-lg px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-[#1B3078]/20 focus:border-[#1B3078] flex items-center justify-between gap-2">
+      <button type="button" onClick={() => setOpen(true)}
+        className="w-full text-left text-[15px] border border-gray-200 rounded-xl px-3 py-3 bg-white flex items-center justify-between gap-2 active:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-[#1B3078]/20 focus:border-[#1B3078]">
         <span className={`truncate ${selected ? "text-gray-900" : "text-gray-400"}`}>
           {selected ? selected.nombre : "Seleccionar producto..."}
         </span>
-        <ChevronDown size={14} className="text-gray-400 shrink-0" />
+        <ChevronDown size={16} className="text-gray-400 shrink-0" />
       </button>
-      {typeof document !== "undefined" && dropdown ? createPortal(dropdown, document.body) : null}
+      {typeof document !== "undefined" && overlay ? createPortal(overlay, document.body) : null}
     </div>
   );
 }
 
 // ── NumberInput: input numérico con buffer string para aceptar "0" y "0.4" ──
-function NumberInput({ value, onChange, step, className, placeholder = "0" }: {
+function NumberInput({ value, onChange, step, className, placeholder = "0", inputMode = "decimal" }: {
   value: number; onChange: (n: number) => void;
   step: string; className: string; placeholder?: string;
+  inputMode?: "numeric" | "decimal";
 }) {
   const [str, setStr] = useState(value ? String(value) : "");
   useEffect(() => {
@@ -216,8 +179,13 @@ function NumberInput({ value, onChange, step, className, placeholder = "0" }: {
     }
   }, [value]); // eslint-disable-line react-hooks/exhaustive-deps
   return (
-    <input type="number" min="0" step={step} value={str} placeholder={placeholder}
+    <input type="number" inputMode={inputMode} min="0" step={step} value={str} placeholder={placeholder}
       className={className}
+      onFocus={e => {
+        const el = e.currentTarget;
+        // Tras abrir el teclado, sube el campo al centro para que no quede tapado
+        setTimeout(() => el.scrollIntoView({ block: "center", behavior: "smooth" }), 300);
+      }}
       onChange={e => {
         setStr(e.target.value);
         const n = parseFloat(e.target.value);
@@ -254,74 +222,74 @@ function ItemRow({ idx, item, productos, onChange, onRemove, canRemove }: {
     ? parseFloat((item.cantidadUnidades * item.tamanoUnidad).toFixed(4)) : null;
 
   return (
-    <div className="bg-gray-50 rounded-xl p-3 space-y-2.5 border border-gray-100">
-      <div className="flex gap-2 items-start">
-        <ProductoCombobox value={item.productoId} productos={productos} onChange={handleProducto} />
+    <div className="bg-gray-50 rounded-xl p-3 space-y-3 border border-gray-100">
+      <div className="flex gap-2 items-center">
+        <ProductoPicker value={item.productoId} productos={productos} onChange={handleProducto} />
         {canRemove && (
           <button type="button" onClick={() => onRemove(idx)}
-            className="p-2 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors shrink-0 mt-0.5">
-            <Trash2 size={15} />
+            className="p-2.5 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors shrink-0">
+            <Trash2 size={16} />
           </button>
         )}
       </div>
 
-      {item.textoIA && (
-        <div className={`flex items-start gap-1.5 text-[11px] rounded-lg px-2 py-1 border ${
-          item.productoId ? "text-gray-500 bg-gray-50 border-gray-100" : "text-amber-700 bg-amber-50 border-amber-100"}`}>
-          <Sparkles size={12} className="mt-0.5 shrink-0" />
-          <span>Leído de la hoja: "{item.textoIA}"{!item.productoId && " — selecciona el producto correcto"}</span>
-        </div>
-      )}
-
       {prod && (
-        <div className="space-y-2">
+        <div className="space-y-2.5">
           {esVolumen && (
             <button type="button"
               onClick={() => onChange(idx, { desglose: !item.desglose, cantidad: 0, cantidadUnidades: 0, tamanoUnidad: 0 })}
-              className={`flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-lg transition-colors ${item.desglose ? "bg-[#EEF1FB] text-[#1B3078]" : "bg-gray-100 text-gray-500 hover:bg-gray-200"}`}>
-              <Layers size={12} />
-              {item.desglose ? "Desglosando por unidades" : "Calcular por unidades"}
+              className={`flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-lg transition-colors ${item.desglose ? "bg-[#EEF1FB] text-[#1B3078]" : "bg-gray-100 text-gray-500"}`}>
+              <Layers size={13} />
+              {item.desglose ? "Por unidades (ej: 4 × 0,4 kg)" : "Poner total directo"}
             </button>
           )}
 
           {item.desglose && esVolumen ? (
-            <div className="flex items-center gap-2 flex-wrap">
-              <div className="flex items-center gap-1.5 bg-white border border-gray-200 rounded-lg px-2 py-1.5">
-                <Hash size={13} className="text-gray-400" />
-                <NumberInput value={item.cantidadUnidades} onChange={handleUnidades} step="1"
-                  className="w-14 text-sm text-center focus:outline-none bg-transparent font-medium" />
+            <div className="space-y-2">
+              <div className="flex items-end gap-2">
+                <div className="flex-1">
+                  <label className="block text-[11px] text-gray-400 mb-1 font-medium">N° de envases</label>
+                  <div className="flex items-center gap-1.5 bg-white border border-gray-200 rounded-xl px-3 py-2.5">
+                    <Hash size={15} className="text-gray-400 shrink-0" />
+                    <NumberInput value={item.cantidadUnidades} onChange={handleUnidades} step="1" inputMode="numeric"
+                      className="w-full text-base text-center focus:outline-none bg-transparent font-semibold" />
+                  </div>
+                </div>
+                <span className="text-gray-300 text-lg pb-2.5">×</span>
+                <div className="flex-1">
+                  <label className="block text-[11px] text-gray-400 mb-1 font-medium">{unidadLabel(prod.unidad)} c/u</label>
+                  <div className="flex items-center bg-white border border-gray-200 rounded-xl px-3 py-2.5">
+                    <NumberInput value={item.tamanoUnidad} onChange={handleTamano} step="0.001"
+                      className="w-full text-base text-center focus:outline-none bg-transparent font-semibold" />
+                  </div>
+                </div>
               </div>
-              <span className="text-gray-400 text-sm">unid. ×</span>
-              <div className="flex items-center gap-1 bg-white border border-gray-200 rounded-lg px-2 py-1.5">
-                <NumberInput value={item.tamanoUnidad} onChange={handleTamano} step="0.001"
-                  className="w-16 text-sm text-center focus:outline-none bg-transparent font-medium" />
-                <span className="text-xs text-gray-500 font-medium">{unidadLabel(prod.unidad)}</span>
+              <div className="text-center">
+                {totalCalc !== null ? (
+                  <span className="inline-block text-[#1B3078] font-bold text-sm bg-[#EEF1FB] px-3 py-1.5 rounded-lg">
+                    Total: {smartNum(totalCalc)} {unidadLabel(prod.unidad)}
+                  </span>
+                ) : <span className="text-gray-300 text-sm">Total: — {unidadLabel(prod.unidad)}</span>}
               </div>
-              {totalCalc !== null ? (
-                <><span className="text-gray-400 text-sm">=</span>
-                  <span className="text-[#1B3078] font-bold text-sm bg-[#EEF1FB] px-2 py-1 rounded-lg">
-                    {smartNum(totalCalc)} {unidadLabel(prod.unidad)}
-                  </span></>
-              ) : <span className="text-gray-300 text-sm">= ? {unidadLabel(prod.unidad)}</span>}
             </div>
           ) : (
-            <div className="flex items-center gap-2">
-              <div className="flex items-center gap-1.5 bg-white border border-gray-200 rounded-lg px-2 py-1.5">
+            <div>
+              <label className="block text-[11px] text-gray-400 mb-1 font-medium">Cantidad total</label>
+              <div className="flex items-center gap-2 bg-white border border-gray-200 rounded-xl px-3 py-2.5">
                 <NumberInput value={item.cantidad}
                   onChange={n => onChange(idx, { cantidad: n })}
                   step={prod.unidad === "UNIDADES" ? "1" : "0.001"}
-                  className="w-20 text-sm text-center focus:outline-none bg-transparent font-medium" />
+                  inputMode={prod.unidad === "UNIDADES" ? "numeric" : "decimal"}
+                  className="flex-1 text-base focus:outline-none bg-transparent font-semibold" />
+                <span className="text-gray-500 text-sm font-medium shrink-0">{unidadLabel(prod.unidad)}</span>
               </div>
-              <span className="text-gray-600 text-sm font-medium">{unidadLabel(prod.unidad)}</span>
             </div>
           )}
-        </div>
-      )}
 
-      {prod && (
-        <input type="text" value={item.notas} onChange={e => onChange(idx, { notas: e.target.value })}
-          placeholder="Notas (opcional)"
-          className="w-full text-xs border border-gray-200 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-[#1B3078]/20 bg-white text-gray-600 placeholder-gray-300" />
+          <input type="text" value={item.notas} onChange={e => onChange(idx, { notas: e.target.value })}
+            placeholder="Notas (opcional)"
+            className="w-full text-sm border border-gray-200 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#1B3078]/20 bg-white text-gray-600 placeholder-gray-300" />
+        </div>
       )}
     </div>
   );
@@ -562,9 +530,6 @@ export default function DonacionesPage() {
   const [notas, setNotas]                   = useState("");
   const [centroAcopioId, setCentroAcopioId] = useState("");
   const [items, setItems] = useState<ItemForm[]>([{ ...BLANK_ITEM }]);
-  const fileRef = useRef<HTMLInputElement>(null);
-  const [scanning, setScanning]   = useState(false);
-  const [scanError, setScanError] = useState("");
 
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const prevSearch  = useRef(filters.search);
@@ -633,44 +598,7 @@ export default function DonacionesPage() {
 
   const openModal = () => {
     setDonante(""); setNacionalidad(""); setNotas(""); setCentroAcopioId("");
-    setItems([{ ...BLANK_ITEM }]); setScanError(""); setModal(true);
-  };
-
-  // Escanear hoja con la cámara → IA lee los productos y precarga los renglones
-  const handleScan = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    e.target.value = "";
-    if (!file) return;
-    setScanError(""); setScanning(true);
-    try {
-      const imageBase64 = await compressImage(file);
-      const res = await fetch("/api/donaciones/escanear", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ imageBase64 }),
-      });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) { setScanError(data.error || "No se pudo leer la imagen."); return; }
-      const detectados: ItemForm[] = (data.items || []).map((it: any) => {
-        const esVolumen   = it.unidad === "KG" || it.unidad === "LITROS";
-        const conDesglose = esVolumen && it.cantidadUnidades > 0 && it.tamano > 0;
-        return {
-          productoId:       it.productoId || "",
-          cantidad:         Number(it.cantidadTotal) || 0,
-          cantidadUnidades: conDesglose ? it.cantidadUnidades : 0,
-          tamanoUnidad:     conDesglose ? it.tamano : 0,
-          desglose:         conDesglose,
-          notas:            "",
-          textoIA:          it.texto || "",
-        };
-      });
-      if (!detectados.length) { setScanError("No se detectaron productos en la imagen. Intenta con una foto más nítida."); return; }
-      setItems(detectados);
-    } catch {
-      setScanError("No se pudo procesar la imagen.");
-    } finally {
-      setScanning(false);
-    }
+    setItems([{ ...BLANK_ITEM }]); setModal(true);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -869,95 +797,80 @@ export default function DonacionesPage() {
       {/* Modal detalle */}
       {selectedDon && <DonacionDetail don={selectedDon} onClose={() => setSelectedDon(null)} />}
 
-      {/* Modal registro */}
+      {/* Modal registro — pantalla completa en móvil, diálogo en escritorio */}
       {modal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 flex items-stretch sm:items-center sm:justify-center sm:p-4">
           <div className="absolute inset-0 bg-black/40" onClick={() => setModal(false)} />
-          <div className="relative bg-white rounded-2xl shadow-xl w-full max-w-xl max-h-[90vh] flex flex-col">
-            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 shrink-0">
+          <div className="relative bg-white w-full flex flex-col h-full sm:h-auto sm:max-w-xl sm:max-h-[90vh] sm:rounded-2xl sm:shadow-xl">
+            <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 shrink-0">
               <h3 className="font-semibold text-gray-900">Registrar donación</h3>
               <button onClick={() => setModal(false)} className="p-1.5 rounded-lg hover:bg-gray-100">
-                <X size={16} />
+                <X size={18} />
               </button>
             </div>
             <form onSubmit={handleSubmit} className="flex flex-col flex-1 overflow-hidden">
-              <div className="overflow-y-auto flex-1 px-6 py-4 space-y-4">
-                <div className="space-y-3">
+              <div className="overflow-y-auto flex-1 px-5 py-4 space-y-5">
+
+                {/* Centro — requerido para admin/superadmin */}
+                {conFiltros && centros.length > 0 && (
                   <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">Donante <span className="text-gray-400">(opcional)</span></label>
-                    <input type="text" value={donante} onChange={e => setDonante(e.target.value)}
-                      placeholder="Nombre del donante o institución"
-                      className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#1B3078]/20 focus:border-[#1B3078]" />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">Nacionalidad del donante <span className="text-gray-400">(opcional)</span></label>
-                    <select value={nacionalidad} onChange={e => setNacionalidad(e.target.value)}
-                      className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#1B3078]/20 bg-white text-gray-700">
-                      <option value="">Sin especificar</option>
-                      {NACIONALIDADES.map(n => <option key={n} value={n}>{n}</option>)}
+                    <label className="block text-xs font-medium text-gray-600 mb-1">Centro de acopio *</label>
+                    <select value={centroAcopioId} onChange={e => setCentroAcopioId(e.target.value)} required
+                      className="w-full text-[15px] border border-gray-200 rounded-xl px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-[#1B3078]/20 bg-white text-gray-700">
+                      <option value="">Seleccionar centro...</option>
+                      {centros.map(c => <option key={c.id} value={c.id}>{c.nombre} — {c.ciudad}</option>)}
                     </select>
                   </div>
-                  {conFiltros && centros.length > 0 && (
-                    <div>
-                      <label className="block text-xs font-medium text-gray-600 mb-1">Centro de acopio *</label>
-                      <select value={centroAcopioId} onChange={e => setCentroAcopioId(e.target.value)} required
-                        className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#1B3078]/20 bg-white text-gray-700">
-                        <option value="">Seleccionar centro...</option>
-                        {centros.map(c => <option key={c.id} value={c.id}>{c.nombre} — {c.ciudad}</option>)}
-                      </select>
-                    </div>
-                  )}
-                  <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">Notas <span className="text-gray-400">(opcional)</span></label>
-                    <textarea value={notas} onChange={e => setNotas(e.target.value)} rows={2}
-                      placeholder="Observaciones generales"
-                      className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#1B3078]/20 resize-none" />
-                  </div>
-                </div>
+                )}
 
+                {/* Productos — lo principal, arriba */}
                 <div>
                   <div className="flex items-center justify-between mb-2">
                     <label className="text-xs font-bold text-gray-700 uppercase tracking-widest">Productos donados</label>
                     <span className="text-xs text-gray-400">{validItems.length} listo{validItems.length !== 1 ? "s" : ""}</span>
                   </div>
-
-                  {/* Escanear hoja con IA */}
-                  <input ref={fileRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={handleScan} />
-                  <button type="button" onClick={() => fileRef.current?.click()} disabled={scanning}
-                    className="mb-1.5 w-full flex items-center justify-center gap-2 py-2.5 text-sm font-semibold text-white rounded-xl transition-opacity hover:opacity-95 disabled:opacity-60"
-                    style={{ background: "linear-gradient(90deg, #1B3078 0%, #00A8E8 100%)" }}>
-                    {scanning
-                      ? <><Loader2 size={15} className="animate-spin" /> Leyendo la hoja con IA...</>
-                      : <><ScanLine size={15} /> Escanear hoja con la cámara (IA)</>}
-                  </button>
-                  <p className="text-[11px] text-gray-400 mb-2 text-center">
-                    Toma una foto de la lista escrita a mano y la IA llenará los productos. Revísalos antes de guardar.
-                  </p>
-                  {scanError && <p className="text-xs text-red-600 bg-red-50 rounded-lg px-3 py-2 mb-2">{scanError}</p>}
-
                   <button type="button" onClick={() => setItems(p => [{ ...BLANK_ITEM }, ...p])}
-                    className="mb-2 w-full flex items-center justify-center gap-2 py-2 text-sm text-[#1B3078] font-medium border-2 border-dashed border-[#1B3078]/20 rounded-xl hover:border-[#1B3078]/40 hover:bg-[#EEF1FB] transition-colors">
-                    <Plus size={15} /> Agregar otro producto
+                    className="mb-2.5 w-full flex items-center justify-center gap-2 py-2.5 text-sm text-[#1B3078] font-semibold border-2 border-dashed border-[#1B3078]/25 rounded-xl hover:border-[#1B3078]/40 hover:bg-[#EEF1FB] transition-colors">
+                    <Plus size={16} /> Agregar otro producto
                   </button>
-                  <div className="space-y-2 max-h-[50vh] overflow-y-auto pr-1">
+                  <div className="space-y-2.5">
                     {items.map((item, i) => (
                       <ItemRow key={i} idx={i} item={item} productos={productos}
                         onChange={changeItem} onRemove={removeItem} canRemove={items.length > 1} />
                     ))}
                   </div>
                 </div>
-              </div>
-              <div className="px-6 py-4 border-t border-gray-100 flex items-center justify-between gap-3 shrink-0 bg-white">
-                <p className="text-xs text-gray-400">
-                  {validItems.length === 0 ? "Añade al menos un producto con cantidad"
-                    : `${validItems.length} producto${validItems.length !== 1 ? "s" : ""} para registrar`}
-                </p>
-                <div className="flex gap-2">
-                  <Button type="button" variant="outline" onClick={() => setModal(false)}>Cancelar</Button>
-                  <Button type="submit" loading={saving} disabled={validItems.length === 0}>
-                    Guardar donación
-                  </Button>
+
+                {/* Datos del donante — opcional, al final */}
+                <div className="space-y-3 pt-1 border-t border-gray-100">
+                  <p className="text-xs font-bold text-gray-400 uppercase tracking-widest pt-3">Datos del donante (opcional)</p>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">Donante</label>
+                    <input type="text" value={donante} onChange={e => setDonante(e.target.value)}
+                      placeholder="Nombre del donante o institución"
+                      className="w-full text-[15px] border border-gray-200 rounded-xl px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-[#1B3078]/20 focus:border-[#1B3078]" />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">Nacionalidad del donante</label>
+                    <select value={nacionalidad} onChange={e => setNacionalidad(e.target.value)}
+                      className="w-full text-[15px] border border-gray-200 rounded-xl px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-[#1B3078]/20 bg-white text-gray-700">
+                      <option value="">Sin especificar</option>
+                      {NACIONALIDADES.map(n => <option key={n} value={n}>{n}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">Notas</label>
+                    <textarea value={notas} onChange={e => setNotas(e.target.value)} rows={2}
+                      placeholder="Observaciones generales"
+                      className="w-full text-[15px] border border-gray-200 rounded-xl px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-[#1B3078]/20 resize-none" />
+                  </div>
                 </div>
+              </div>
+              <div className="px-5 py-3 border-t border-gray-100 flex items-center gap-3 shrink-0 bg-white">
+                <Button type="button" variant="outline" onClick={() => setModal(false)} className="shrink-0">Cancelar</Button>
+                <Button type="submit" loading={saving} disabled={validItems.length === 0} className="flex-1">
+                  Guardar{validItems.length > 0 ? ` (${validItems.length})` : ""}
+                </Button>
               </div>
             </form>
           </div>
