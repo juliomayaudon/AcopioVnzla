@@ -6,13 +6,14 @@ import {
   Plus, PackagePlus, Trash2, X, Hash, Layers, Search,
   ChevronLeft, ChevronRight, SlidersHorizontal, User,
   Building2, Calendar, FileText, Package, ChevronDown, ChevronUp, Eye, Download,
-  Check,
+  Check, FileSpreadsheet,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { formatDate } from "@/lib/utils";
 import { puedePortalAdmin } from "@/lib/permisos";
+import ImportarCSV from "@/components/importar-csv";
 
 // ── helpers ───────────────────────────────────────────────────────────────────
 function unidadLabel(u?: string) {
@@ -524,6 +525,7 @@ export default function DonacionesPage() {
   const [centros, setCentros]     = useState<any[]>([]);
 
   const [modal, setModal]   = useState(false);
+  const [importCsv, setImportCsv] = useState(false);
   const [saving, setSaving] = useState(false);
   const [donante, setDonante]               = useState("");
   const [nacionalidad, setNacionalidad]     = useState("");
@@ -642,7 +644,10 @@ export default function DonacionesPage() {
             <p className="text-gray-500 text-sm">{total > 0 ? `${total} registradas` : "Sin registros aún"}</p>
           </div>
         </div>
-        <div className="flex gap-2 sm:ml-auto">
+        <div className="flex gap-2 sm:ml-auto flex-wrap">
+          <Button variant="outline" onClick={() => setImportCsv(true)}>
+            <FileSpreadsheet size={15} className="mr-1.5" /> Importar CSV
+          </Button>
           <Button variant="outline" onClick={descargarCSV} disabled={total === 0}>
             <Download size={15} className="mr-1.5" /> Descargar CSV
           </Button>
@@ -796,6 +801,17 @@ export default function DonacionesPage() {
 
       {/* Modal detalle */}
       {selectedDon && <DonacionDetail don={selectedDon} onClose={() => setSelectedDon(null)} />}
+
+      {/* Importar CSV */}
+      {importCsv && (
+        <ImportarCSV
+          productos={productos}
+          centros={centros}
+          conFiltros={conFiltros}
+          onClose={() => setImportCsv(false)}
+          onImported={() => setFilters(f => ({ ...f, page: 1 }))}
+        />
+      )}
 
       {/* Modal registro — pantalla completa en móvil, diálogo en escritorio */}
       {modal && (
