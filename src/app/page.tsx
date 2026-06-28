@@ -99,6 +99,7 @@ export default function HomePage() {
       <nav className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur border-b border-gray-100 h-14 flex items-center px-6 lg:px-12">
         <img src="/Operacion_transparente.svg" alt="Operación Todos con Venezuela" style={{ height: 38, width: "auto" }} />
         <div className="ml-auto flex items-center gap-6">
+          <Link href="/como-funciona" className="hidden sm:block text-sm text-gray-600 hover:text-[#1B3078] font-medium">¿Cómo funciona?</Link>
           <a href="#centros" className="hidden sm:block text-sm text-gray-600 hover:text-[#1B3078] font-medium">Centros</a>
           <a href="#mapa"    className="hidden sm:block text-sm text-gray-600 hover:text-[#1B3078] font-medium">Mapa</a>
           <Link href="/registrar-centro" className="hidden sm:block text-sm text-gray-600 hover:text-[#1B3078] font-medium">Registra tu centro</Link>
@@ -158,6 +159,9 @@ export default function HomePage() {
             </Link>
           </div>
           <div className="flex flex-col sm:flex-row gap-3 justify-center mt-3">
+            <Link href="/como-funciona" className="inline-flex items-center gap-2 text-white/80 font-medium px-4 py-2 rounded-xl hover:text-white transition-colors text-sm">
+              ¿Cómo funciona? <ArrowRight size={15} />
+            </Link>
             <a href="#centros" className="inline-flex items-center gap-2 text-white/80 font-medium px-4 py-2 rounded-xl hover:text-white transition-colors text-sm">
               Ver centros <ArrowRight size={15} />
             </a>

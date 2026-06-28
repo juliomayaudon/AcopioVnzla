@@ -11,6 +11,7 @@ const PUBLIC_PATHS = [
   "/centro",
   "/registrar-centro",
   "/registrar-voluntario",
+  "/como-funciona",
 ];
 
 export default async function proxy(req: NextRequest) {
