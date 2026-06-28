@@ -31,7 +31,7 @@ export async function POST(req: NextRequest) {
   const catalogo = productos.map((p) => `${p.id}: ${p.nombre}`).join("\n");
   const lista = textos.map((t, i) => `${i + 1}. ${t}`).join("\n");
 
-  const model = process.env.NVIDIA_TEXT_MODEL || "nvidia/llama-3.3-nemotron-super-49b-v1";
+  const model = process.env.NVIDIA_TEXT_MODEL || "meta/llama-3.1-8b-instruct";
   const prompt = `Tienes un catálogo de productos de ayuda humanitaria (id: nombre):
 ${catalogo}
 
@@ -55,11 +55,11 @@ ${lista}`;
       body: JSON.stringify({
         model,
         messages: [
-          { role: "system", content: "detailed thinking off" },
+          { role: "system", content: "Eres un asistente que responde ÚNICAMENTE con objetos JSON, una línea por elemento, sin explicaciones ni markdown. detailed thinking off" },
           { role: "user", content: prompt },
         ],
         temperature: 0,
-        max_tokens: 3000,
+        max_tokens: 4096,
       }),
     });
   } catch {

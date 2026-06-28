@@ -81,24 +81,43 @@ function parseNum(s: string): number {
 function parseUnidad(s: string): string | null {
   const t = norm(s);
   if (!t) return null;
-  if (/\b(kg|kilo|kilos|kilogramo|kilogramos)\b/.test(t) || t === "k") return "KG";
-  if (/\b(g|gr|grs|gramo|gramos)\b/.test(t)) return "KG";
-  if (/\b(l|lt|lts|litro|litros)\b/.test(t)) return "LITROS";
-  if (/\b(ml|mililitro|mililitros|cc)\b/.test(t)) return "LITROS";
+  if (/(kilogramos?|kilos?|kilo|kg)\b/.test(t) || t === "k") return "KG";
+  if (/(gramos?|grs?|gr|g|mg)\b/.test(t)) return "KG";
+  if (/(mililitros?|ml|cc)\b/.test(t)) return "LITROS";
+  if (/(litros?|lts?|lt|l)\b/.test(t)) return "LITROS";
   if (/(unid|unidad|pieza|pza|paquete|caja|lata|bolsa|botella|saco|bulto)/.test(t)) return "UNIDADES";
   return null;
 }
 
-// Factor para convertir el peso/volumen escrito en la celda a la unidad base del producto
-// (kg o litros). Ej: "500 g" → 0.5 ; "200 ml" → 0.2 ; "1 kg" → 1. Sin unidad: se asume base.
-function factorPeso(s: string): number {
+// Convierte el peso/volumen escrito en la celda (con unidad pegada o con espacio) a la
+// unidad base del producto (kg o litros). Ej: "500 g"→0.5 · "80gr"→0.08 · "200ml"→0.2 ·
+// "2lb"→0.907 · "1 galon"→3.785. Sin unidad: se asume que ya está en la unidad base.
+function pesoBase(s: string): number {
+  const num = parseNum(s);
+  if (!Number.isFinite(num)) return NaN;
   const t = norm(s);
-  if (/\b(kg|kilo|kilos|kilogramo|kilogramos)\b/.test(t)) return 1;
-  if (/\b(mg|miligramo|miligramos)\b/.test(t)) return 0.000001;
-  if (/\b(g|gr|grs|gramo|gramos)\b/.test(t)) return 0.001;
-  if (/\b(l|lt|lts|litro|litros)\b/.test(t)) return 1;
-  if (/\b(ml|mililitro|mililitros|cc)\b/.test(t)) return 0.001;
-  return 1;
+  let f = 1;
+  if (/(kilogramos?|kilos?|kilo|kg)\b/.test(t)) f = 1;
+  else if (/(miligramos?|mg)\b/.test(t)) f = 0.000001;
+  else if (/(gramos?|grs?|gr|g)\b/.test(t)) f = 0.001;
+  else if (/(mililitros?|ml|cc)\b/.test(t)) f = 0.001;
+  else if (/(litros?|lts?|lt|l)\b/.test(t)) f = 1;
+  else if (/(libras?|lbs?|lb)\b/.test(t)) f = 0.453592;
+  else if (/(galones?|galon|gal)\b/.test(t)) f = 3.785;
+  return parseFloat((num * f).toFixed(4));
+}
+
+// Repara texto UTF-8 que fue leído como Latin-1 (mojibake): "AtÃºn" → "Atún".
+function repararMojibake(s: string): string {
+  if (!/Ã.|Â./.test(s)) return s;
+  if ([...s].some((c) => c.charCodeAt(0) > 255)) return s;
+  try {
+    const bytes = Uint8Array.from([...s].map((c) => c.charCodeAt(0)));
+    const dec = new TextDecoder("utf-8", { fatal: false }).decode(bytes);
+    return (dec.match(/Ã|Â/g) || []).length < (s.match(/Ã|Â/g) || []).length ? dec : s;
+  } catch {
+    return s;
+  }
 }
 
 function parseFecha(s: string): string | null {
@@ -130,6 +149,7 @@ export default function ImportarCSV({
   );
   const [centroId, setCentroId] = useState("");
   const [overrides, setOverrides] = useState<Record<number, string>>({});
+  const [cantOverride, setCantOverride] = useState<Record<number, number>>({});
   const [aiMatches, setAiMatches] = useState<Record<string, string>>({});
   const [agrupar, setAgrupar] = useState(false);
   const [aiLoading, setAiLoading] = useState(false);
@@ -166,7 +186,16 @@ export default function ImportarCSV({
 
   const onFile = async (file: File) => {
     setError("");
-    const text = await file.text();
+    // Decodifica de forma robusta: intenta UTF-8 estricto; si falla, Windows-1252;
+    // luego repara mojibake (UTF-8 leído como Latin-1) para los acentos.
+    const buf = await file.arrayBuffer();
+    let text: string;
+    try {
+      text = new TextDecoder("utf-8", { fatal: true }).decode(buf);
+    } catch {
+      text = new TextDecoder("windows-1252").decode(buf);
+    }
+    text = repararMojibake(text);
     const rows = parseCSV(text);
     if (rows.length < 2) { setError("El archivo no tiene filas de datos."); return; }
     const hs = rows[0].map((h) => h.trim());
@@ -192,8 +221,7 @@ export default function ImportarCSV({
     return rawRows.map((r, idx) => {
       const txt = (r[mapping.producto] ?? "").trim();
       const cant = parseNum(mapping.cantidad >= 0 ? r[mapping.cantidad] ?? "" : "");
-      const pesoStr = mapping.peso >= 0 ? r[mapping.peso] ?? "" : "";
-      const peso = parseNum(pesoStr) * factorPeso(pesoStr); // convertido a kg / L
+      const peso = pesoBase(mapping.peso >= 0 ? r[mapping.peso] ?? "" : ""); // convertido a kg / L
       const unidadStr = mapping.unidad >= 0 ? r[mapping.unidad] ?? "" : "";
       const fechaStr = mapping.fecha >= 0 ? r[mapping.fecha] ?? "" : "";
       const donante = mapping.donante >= 0 ? (r[mapping.donante] ?? "").trim() : "";
@@ -217,13 +245,16 @@ export default function ImportarCSV({
         cantidad = cant;
       }
 
+      // Si el usuario corrigió la cantidad total a mano, prevalece (y se pierde el desglose)
+      if (idx in cantOverride) { cantidad = cantOverride[idx]; cantidadUnidades = null; }
+
       const fechaISO = fechaStr ? parseFecha(fechaStr) : null;
       return {
         idx, txt, productoId, prod, unidad, cantidad, cantidadUnidades,
         donante, nac, notas, fechaISO, valida: !!productoId && cantidad > 0,
       };
     });
-  }, [rawRows, mapping, overrides, aiMatches, fuzzy, productos]);
+  }, [rawRows, mapping, overrides, cantOverride, aiMatches, fuzzy, productos]);
 
   const stats = useMemo(() => ({
     total: rows.length,
@@ -450,19 +481,23 @@ export default function ImportarCSV({
                               ))}
                             </select>
                           </td>
-                          <td className="px-3 py-2 text-right whitespace-nowrap align-top">
-                            {r.cantidad > 0 ? (
-                              <div>
-                                <span className="font-semibold text-gray-800">
-                                  {fmt(r.cantidad)} <span className="text-xs text-gray-400">{uLabel(r.unidad)}</span>
-                                </span>
-                                {r.cantidadUnidades ? (
-                                  <p className="text-[11px] text-gray-400">
-                                    {fmt(r.cantidadUnidades)} × {fmt(r.cantidad / r.cantidadUnidades)} {uLabel(r.unidad)}
-                                  </p>
-                                ) : null}
-                              </div>
-                            ) : <span className="text-amber-600 text-xs flex items-center gap-1 justify-end"><AlertTriangle size={12} /> sin cant.</span>}
+                          <td className="px-3 py-2 align-top">
+                            <div className="flex items-center gap-1 justify-end">
+                              <input type="number" inputMode="decimal" step="any" min="0"
+                                value={r.cantidad || ""}
+                                onChange={(e) => {
+                                  const v = parseFloat(e.target.value);
+                                  setCantOverride((o) => ({ ...o, [r.idx]: isNaN(v) ? 0 : v }));
+                                }}
+                                className={`w-20 text-right text-sm border rounded-lg px-2 py-1.5 bg-white focus:outline-none focus:ring-2 focus:ring-[#1B3078]/20 ${
+                                  r.cantidad > 0 ? "border-gray-200 text-gray-800 font-semibold" : "border-amber-300 text-amber-700"}`} />
+                              <span className="text-xs text-gray-400 w-5 shrink-0">{uLabel(r.unidad)}</span>
+                            </div>
+                            {r.cantidadUnidades ? (
+                              <p className="text-[11px] text-gray-400 text-right mt-0.5">
+                                {fmt(r.cantidadUnidades)} × {fmt(r.cantidad / r.cantidadUnidades)} {uLabel(r.unidad)}
+                              </p>
+                            ) : null}
                           </td>
                         </tr>
                       ))}
