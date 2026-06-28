@@ -396,9 +396,14 @@ export default function HomePage() {
           <p className="text-white/40 text-xs text-center">
             Sistema de Gestión de Centros de Acopio · Acopio Venezuela · {new Date().getFullYear()}
           </p>
-          <Link href="/login" className="text-[#00A8E8] text-sm font-medium hover:underline">
-            Acceso voluntarios →
-          </Link>
+          <div className="flex items-center gap-5">
+            <Link href="/terminos" className="text-white/60 text-xs hover:text-white hover:underline">
+              Términos y Condiciones
+            </Link>
+            <Link href="/login" className="text-[#00A8E8] text-sm font-medium hover:underline">
+              Acceso voluntarios →
+            </Link>
+          </div>
         </div>
       </footer>
     </div>

@@ -6,7 +6,7 @@ import {
 } from "lucide-react";
 
 export const metadata = {
-  title: "¿Cómo funciona? — Operación Todos con Venezuela",
+  title: "¿Cómo funciona? — Acopio Venezuela",
   description: "Guía paso a paso: registra tu centro, agrega coordinadores y voluntarios, y gestiona donaciones.",
 };
 

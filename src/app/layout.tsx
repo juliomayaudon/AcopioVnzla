@@ -6,8 +6,8 @@ import { Providers } from "@/components/providers";
 const geist = Geist({ subsets: ["latin"], variable: "--font-geist" });
 
 export const metadata: Metadata = {
-  title: "Operación Todos con Venezuela — Centros de Acopio",
-  description: "Plataforma de gestión de centros de acopio humanitario para Venezuela",
+  title: "Acopio Venezuela — Gestión de Centros de Acopio",
+  description: "Plataforma independiente de gestión de centros de acopio humanitario para Venezuela.",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

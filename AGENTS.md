@@ -4,7 +4,7 @@
 This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` before writing any code. Heed deprecation notices.
 <!-- END:nextjs-agent-rules -->
 
-# Operación Todos con Venezuela — Sistema de Centros de Acopio
+# Acopio Venezuela — Sistema de Centros de Acopio
 
 App de gestión de centros de acopio humanitario para Venezuela: registra donaciones, envíos,
 consumo interno e inventario; con páginas públicas por centro, dashboards y exportación CSV/PDF.
