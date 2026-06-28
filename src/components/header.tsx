@@ -19,12 +19,10 @@ export function Header({ onMenuClick }: HeaderProps) {
         <Menu size={18} />
       </button>
 
-      {/* Logo izquierda */}
-      <img
-        src="/Operacion_transparente.svg"
-        alt="Operación Todos con Venezuela"
-        style={{ height: "36px", width: "auto" }}
-      />
+      {/* Marca izquierda */}
+      <span className="text-lg font-bold text-[#1B3078] tracking-tight">
+        Acopio<span className="text-[#00A8E8]"> Venezuela</span>
+      </span>
 
       <div className="flex-1" />
 

@@ -187,7 +187,7 @@ function generarGuiaPDF(envio: Envio) {
   const folio = envio.id.slice(-8).toUpperCase();
   const hoy = new Date().toLocaleDateString("es", { day: "2-digit", month: "long", year: "numeric" });
   const origin = typeof window !== "undefined" ? window.location.origin : "";
-  const logoUrl = `${origin}/Operacion_transparente.svg`;
+  void origin;
 
   // Fila de detalle "etiqueta: valor" solo si hay valor
   const row = (label: string, value: any) =>
@@ -255,10 +255,10 @@ function generarGuiaPDF(envio: Envio) {
 <body>
   <div class="head">
     <div class="brand">
-      <img class="logo" src="${esc(logoUrl)}" alt="Operación Todos con Venezuela" />
+      <div class="logo-text" style="font-size:22px;font-weight:700;color:#1B3078;letter-spacing:-0.02em">Acopio<span style="color:#00A8E8"> Venezuela</span></div>
       <div>
         <h1>Guía de Envío</h1>
-        <div class="sub">Operación Todos con Venezuela</div>
+        <div class="sub">Acopio Venezuela</div>
         <span class="estado e-${esc(envio.estado)}">${esc(ESTADO_LABEL[envio.estado] || envio.estado)}</span>
       </div>
     </div>

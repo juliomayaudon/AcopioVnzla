@@ -109,7 +109,9 @@ export default function CentroPublicoPage({ params }: { params: Promise<{ id: st
           <ArrowLeft size={16} /> Inicio
         </Link>
         <div className="ml-auto">
-          <img src="/Operacion_transparente.svg" alt="Operación Todos con Venezuela" style={{ height: 34, width: "auto" }} />
+          <span className="text-base sm:text-lg font-bold text-[#1B3078] tracking-tight">
+            Acopio<span className="text-[#00A8E8]"> Venezuela</span>
+          </span>
         </div>
       </nav>
 

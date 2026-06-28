@@ -75,7 +75,9 @@ export default function RegistrarCentroPage() {
         <Link href="/" className="flex items-center gap-2 text-gray-500 hover:text-[#1B3078] text-sm font-medium">
           <ArrowLeft size={16} /> Inicio
         </Link>
-        <img src="/Operacion_transparente.svg" alt="Operación Todos con Venezuela" className="h-8 ml-auto" />
+        <span className="ml-auto text-base font-bold text-[#1B3078] tracking-tight">
+          Acopio<span className="text-[#00A8E8]"> Venezuela</span>
+        </span>
       </nav>
 
       <div className="max-w-2xl mx-auto px-5 py-10">

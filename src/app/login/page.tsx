@@ -36,7 +36,9 @@ export default function LoginPage() {
       {/* Panel izquierdo — branding */}
       <div className="hidden lg:flex flex-col justify-between w-1/2 bg-[#1B3078] p-12">
         <div>
-          <img src="/Operacion_blanco.svg" alt="Operación Todos con Venezuela" className="h-24 w-auto" />
+          <span className="text-3xl font-bold text-white tracking-tight">
+            Acopio<span className="text-[#00A8E8]"> Venezuela</span>
+          </span>
         </div>
         <div className="space-y-4">
           <p className="text-white text-xl font-semibold leading-snug">
@@ -49,15 +51,16 @@ export default function LoginPage() {
           </p>
           <div className="pt-4 text-[#00A8E8] tracking-widest text-lg">★ ★ ★ ★ ★ ★ ★</div>
         </div>
-        <p className="text-white/20 text-xs">AcopioVzla — {new Date().getFullYear()}</p>
+        <p className="text-white/20 text-xs">Acopio Venezuela — {new Date().getFullYear()}</p>
       </div>
 
       {/* Panel derecho — formulario */}
       <div className="flex-1 flex items-center justify-center bg-gray-50 px-6">
         <div className="w-full max-w-md">
-          {/* Logo Operación Todos con Venezuela */}
-          <img src="/Operacion_transparente.svg" alt="Operación Todos con Venezuela"
-            className="h-28 w-auto mx-auto mb-6" />
+          {/* Marca */}
+          <div className="text-center mb-6 text-3xl font-bold text-[#1B3078] tracking-tight">
+            Acopio<span className="text-[#00A8E8]"> Venezuela</span>
+          </div>
 
           <div className="bg-white rounded-2xl shadow-lg p-8 border border-gray-100">
             <h2 className="text-2xl font-bold text-[#1B3078] mb-1">Bienvenido</h2>

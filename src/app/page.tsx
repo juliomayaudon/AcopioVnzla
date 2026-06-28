@@ -97,7 +97,9 @@ export default function HomePage() {
 
       {/* ── Navbar ── */}
       <nav className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur border-b border-gray-100 h-14 flex items-center px-6 lg:px-12">
-        <img src="/Operacion_transparente.svg" alt="Operación Todos con Venezuela" style={{ height: 38, width: "auto" }} />
+        <span className="text-xl font-bold text-[#1B3078] tracking-tight">
+          Acopio<span className="text-[#00A8E8]"> Venezuela</span>
+        </span>
         <div className="ml-auto flex items-center gap-6">
           <Link href="/como-funciona" className="hidden sm:block text-sm text-gray-600 hover:text-[#1B3078] font-medium">¿Cómo funciona?</Link>
           <a href="#centros" className="hidden sm:block text-sm text-gray-600 hover:text-[#1B3078] font-medium">Centros</a>
@@ -119,8 +121,9 @@ export default function HomePage() {
             style={{ background: "radial-gradient(circle, #00A8E8 0%, transparent 70%)" }} />
         </div>
         <div className="relative max-w-4xl mx-auto">
-          <img src="/Operacion_blanco.svg" alt="Operación Todos con Venezuela"
-            className="mx-auto mb-8" style={{ height: 150, width: "auto" }} />
+          <div className="mx-auto mb-8 text-5xl sm:text-6xl font-bold text-white tracking-tight">
+            Acopio<span className="text-[#00A8E8]"> Venezuela</span>
+          </div>
           <div className="inline-flex items-center gap-2 bg-white/10 rounded-full px-4 py-1.5 mb-6 backdrop-blur">
             <span className="w-2 h-2 rounded-full bg-[#00A8E8] animate-pulse" />
             <span className="text-white/80 text-xs font-medium tracking-wide uppercase">
@@ -386,10 +389,11 @@ export default function HomePage() {
       {/* ── Footer ── */}
       <footer className="bg-[#0f1f5c] py-8 px-6">
         <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
-          <img src="/Operacion_blanco.svg" alt="Operación Todos con Venezuela"
-            style={{ height: 40, width: "auto" }} />
+          <span className="text-xl font-bold text-white tracking-tight">
+            Acopio<span className="text-[#00A8E8]"> Venezuela</span>
+          </span>
           <p className="text-white/40 text-xs text-center">
-            Sistema de Gestión de Centros de Acopio · Operación Todos con Venezuela · {new Date().getFullYear()}
+            Sistema de Gestión de Centros de Acopio · Acopio Venezuela · {new Date().getFullYear()}
           </p>
           <Link href="/login" className="text-[#00A8E8] text-sm font-medium hover:underline">
             Acceso voluntarios →
