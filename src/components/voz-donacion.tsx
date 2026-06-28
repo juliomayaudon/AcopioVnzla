@@ -145,11 +145,8 @@ export default function VozDonacion({ productos, onAdd }: {
   const escuchandoRef = useRef(false);
   const prodRef = useRef(productos);
   const onAddRef = useRef(onAdd);
-  const sesionRef = useRef("");       // transcripción final de la sesión actual
-  const procesadoRef = useRef(0);     // cuántos caracteres de la sesión ya procesamos
+  const sesionRef = useRef("");       // transcripción final de la frase actual
   const ultimoRef = useRef<{ sig: string; t: number } | null>(null); // anti-duplicado
-  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const flushRef = useRef<() => void>(() => {});
   useEffect(() => { prodRef.current = productos; }, [productos]);
   useEffect(() => { onAddRef.current = onAdd; }, [onAdd]);
 
@@ -158,23 +155,23 @@ export default function VozDonacion({ productos, onAdd }: {
     if (!SR) { setSoportado(false); return; }
     const rec = new SR();
     rec.lang = "es-ES";
-    rec.continuous = true;
+    // UNA frase por sesión: el reconocedor escucha una frase, la devuelve y termina;
+    // luego reiniciamos para la siguiente. Esto evita que el array de resultados acumule
+    // la misma frase varias veces (que causaba el triple registro).
+    rec.continuous = false;
     rec.interimResults = true;
 
-    // Procesa SOLO lo nuevo de la sesión (lo que aún no se había procesado)
-    const flush = () => {
-      if (timerRef.current) { clearTimeout(timerRef.current); timerRef.current = null; }
-      const full = sesionRef.current.trim();
-      const nuevo = full.slice(procesadoRef.current).trim();
-      procesadoRef.current = full.length;
+    // Procesa la frase de ESTA sesión, una sola vez
+    const procesar = () => {
+      const frase = sesionRef.current.trim();
+      sesionRef.current = "";
       setInterim("");
-      if (!nuevo) return;
-      const r = parseFrase(nuevo, prodRef.current);
+      if (!frase) return;
+      const r = parseFrase(frase, prodRef.current);
       if (r.matched && r.item) {
-        // Evita procesar la misma frase dos veces (re-emisión del reconocedor)
-        const sig = norm(nuevo);
+        const sig = norm(frase);
         const ahora = Date.now();
-        if (ultimoRef.current && ultimoRef.current.sig === sig && ahora - ultimoRef.current.t < 2500) return;
+        if (ultimoRef.current && ultimoRef.current.sig === sig && ahora - ultimoRef.current.t < 2000) return;
         ultimoRef.current = { sig, t: ahora };
         onAddRef.current(r.item);
         setFeedback({ ok: true, msg: r.resumen });
@@ -182,7 +179,6 @@ export default function VozDonacion({ productos, onAdd }: {
         setFeedback({ ok: false, msg: `No reconocí: "${r.texto}"` });
       }
     };
-    flushRef.current = flush;
 
     rec.onresult = (e: any) => {
       let finalTxt = "", intTxt = "";
@@ -191,11 +187,8 @@ export default function VozDonacion({ productos, onAdd }: {
         if (e.results[i].isFinal) finalTxt += txt + " ";
         else intTxt += txt;
       }
-      sesionRef.current = finalTxt.trim();
-      setInterim((sesionRef.current.slice(procesadoRef.current) + " " + intTxt).trim());
-      // Espera ~1.1s sin nueva voz → frase terminada → procesa
-      if (timerRef.current) clearTimeout(timerRef.current);
-      timerRef.current = setTimeout(flush, 1100);
+      if (finalTxt.trim()) sesionRef.current = finalTxt.trim();
+      setInterim((sesionRef.current + " " + intTxt).trim());
     };
     rec.onerror = (e: any) => {
       if (e.error === "not-allowed" || e.error === "service-not-allowed") {
@@ -205,32 +198,23 @@ export default function VozDonacion({ productos, onAdd }: {
       }
     };
     rec.onend = () => {
-      if (escuchandoRef.current) {
-        flush();                       // procesa lo pendiente antes de reiniciar
-        sesionRef.current = "";        // sesión nueva limpia (evita re-procesar)
-        procesadoRef.current = 0;
-        try { rec.start(); } catch {}
-      } else { setInterim(""); }
+      procesar();                              // procesa la frase de esta sesión (1 vez)
+      if (escuchandoRef.current) { try { rec.start(); } catch {} } // siguiente frase
+      else setInterim("");
     };
     recRef.current = rec;
-    return () => {
-      escuchandoRef.current = false;
-      if (timerRef.current) clearTimeout(timerRef.current);
-      try { rec.stop(); } catch {}
-    };
+    return () => { escuchandoRef.current = false; try { rec.stop(); } catch {} };
   }, []);
 
   const toggle = () => {
     if (!recRef.current) return;
     if (escuchando) {
-      escuchandoRef.current = false;
+      escuchandoRef.current = false;   // detiene el ciclo; onend procesa lo pendiente
       setEscuchando(false);
       try { recRef.current.stop(); } catch {}
-      flushRef.current();   // procesa lo que haya quedado pendiente
     } else {
       setFeedback(null);
       sesionRef.current = "";
-      procesadoRef.current = 0;
       ultimoRef.current = null;
       escuchandoRef.current = true;
       setEscuchando(true);
