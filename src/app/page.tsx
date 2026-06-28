@@ -121,8 +121,9 @@ export default function HomePage() {
             style={{ background: "radial-gradient(circle, #00A8E8 0%, transparent 70%)" }} />
         </div>
         <div className="relative max-w-4xl mx-auto">
-          <div className="mx-auto mb-8 text-5xl sm:text-6xl font-bold text-white tracking-tight">
-            Acopio<span className="text-[#00A8E8]"> Venezuela</span>
+          <div className="mx-auto mb-8 text-5xl sm:text-6xl font-bold text-white tracking-tight leading-tight">
+            Acopio
+            <span className="block text-[#00A8E8]">Venezuela</span>
           </div>
           <div className="inline-flex items-center gap-2 bg-white/10 rounded-full px-4 py-1.5 mb-6 backdrop-blur">
             <span className="w-2 h-2 rounded-full bg-[#00A8E8] animate-pulse" />
