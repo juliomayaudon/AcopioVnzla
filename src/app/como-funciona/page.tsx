@@ -2,7 +2,7 @@ import Link from "next/link";
 import {
   ArrowLeft, ArrowRight, Building2, Users, HeartHandshake, PackagePlus,
   User, MapPin, CheckCircle2, Search, FileSpreadsheet, Eye, Filter, Plus,
-  ListChecks, LogIn,
+  ListChecks, LogIn, Mic,
 } from "lucide-react";
 
 export const metadata = {
@@ -217,18 +217,22 @@ export default function ComoFuncionaPage() {
         <Seccion
           num="4" icon={PackagePlus} invertir
           titulo="Registra y consulta donaciones"
-          intro="Lleva el control de todo lo que entra a tu centro: una por una, o importando una hoja de Excel/CSV completa."
+          intro="Lleva el control de todo lo que entra a tu centro: una por una, dictando por voz, o importando una hoja de Excel/CSV completa."
           pasos={<>
             <Paso n={1}>Entra a <b>«Donaciones»</b> y toca <b>«Registrar donación»</b>: busca el producto, pon la cantidad y guarda.</Paso>
-            <Paso n={2}>¿Tienes muchas en Excel? Toca <b>«Importar CSV»</b>, sube el archivo y <b>asocia las columnas</b> (producto, cantidad, peso…).</Paso>
-            <Paso n={3}><b>Revisa</b> la vista previa y corrige lo que falte (con el buscador o el botón de IA), luego <b>importa</b>.</Paso>
+            <Paso n={2}><b>¡Dicta por voz!</b> Toca <b>«Dictar por voz»</b> 🎤 y habla: «4 kilos de arroz», «2 latas de atún de 80 gramos»… cada producto se agrega solo mientras lo dices.</Paso>
+            <Paso n={3}>¿Tienes muchas en Excel? Toca <b>«Importar CSV»</b>, sube el archivo, <b>asocia las columnas</b> (producto, cantidad, peso…), revisa la vista previa e <b>importa</b>.</Paso>
             <Paso n={4}>Para consultar: <b>filtra</b> por país, ciudad, centro o fecha, abre el <b>detalle</b> con el ojo y <b>descarga el CSV</b>.</Paso>
           </>}
           mockup={
             <Frame title="Donaciones">
-              <div className="flex items-center justify-between mb-3 gap-2">
+              <div className="flex items-center justify-between mb-2 gap-2">
                 <FakeBtn solid={false}><FileSpreadsheet size={13} /> Importar CSV</FakeBtn>
                 <FakeBtn><Plus size={13} /> Registrar donación</FakeBtn>
+              </div>
+              <div className="mb-3 flex items-center justify-center gap-1.5 text-xs font-semibold text-white rounded-lg py-1.5"
+                style={{ background: "linear-gradient(90deg, #1B3078 0%, #00A8E8 100%)" }}>
+                <Mic size={13} /> Dictar por voz · “4 kilos de arroz”
               </div>
               <div className="flex items-center gap-1.5 mb-2 text-[10px] text-gray-400">
                 <Filter size={12} /> País · Ciudad · Centro · Fecha
