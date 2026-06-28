@@ -5,6 +5,7 @@ import {
   AlertTriangle, FileSpreadsheet, ChevronLeft, ChevronRight,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import ProductoPicker from "@/components/producto-picker";
 
 interface Producto { id: string; nombre: string; unidad: string; categoria: { nombre: string } }
 interface Centro { id: string; nombre: string; ciudad: string }
@@ -159,12 +160,6 @@ export default function ImportarCSV({
   const [error, setError] = useState("");
   const [result, setResult] = useState<number | null>(null);
   const [fileName, setFileName] = useState("");
-
-  const productosPorCat = useMemo(() => {
-    const map: Record<string, Producto[]> = {};
-    for (const p of productos) (map[p.categoria.nombre] ||= []).push(p);
-    return Object.entries(map).sort((a, b) => a[0].localeCompare(b[0]));
-  }, [productos]);
 
   const fuzzy = useMemo(() => {
     return (texto: string): string => {
@@ -485,17 +480,15 @@ export default function ImportarCSV({
                             {r.donante && <p className="text-[11px] text-gray-400">{r.donante}</p>}
                           </td>
                           <td className="px-3 py-2">
-                            <select value={r.productoId}
-                              onChange={(e) => setOverrides((o) => ({ ...o, [r.idx]: e.target.value }))}
-                              className={`w-full text-xs border rounded-lg px-2 py-1.5 bg-white focus:outline-none focus:ring-2 focus:ring-[#1B3078]/20 ${
-                                r.productoId ? "border-gray-200 text-gray-700" : "border-amber-300 text-amber-700"}`}>
-                              <option value="">— sin asociar —</option>
-                              {productosPorCat.map(([cat, prods]) => (
-                                <optgroup key={cat} label={cat}>
-                                  {prods.map((p) => <option key={p.id} value={p.id}>{p.nombre}</option>)}
-                                </optgroup>
-                              ))}
-                            </select>
+                            <ProductoPicker
+                              value={r.productoId}
+                              productos={productos}
+                              onChange={(id) => setOverrides((o) => ({ ...o, [r.idx]: id }))}
+                              placeholder="— sin asociar —"
+                              invalid={!r.productoId}
+                              size="sm"
+                              allowEmpty
+                            />
                           </td>
                           <td className="px-3 py-2 align-top">
                             <div className="flex items-center gap-1 justify-end">
