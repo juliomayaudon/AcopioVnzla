@@ -1,12 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
 
+// Público: lo usa el buscador de direcciones del registro de centros (sin login).
+// Solo es un proxy a la búsqueda de Nominatim; no expone datos sensibles.
 export async function GET(req: NextRequest) {
-  // Solo usuarios autenticados (evita usar el servidor como proxy abierto a Nominatim)
-  const session = await getServerSession(authOptions);
-  if (!session) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
-
   const q = new URL(req.url).searchParams.get("q")?.trim();
   if (!q) return NextResponse.json([]);
 

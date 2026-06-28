@@ -92,12 +92,20 @@ export default function LoginPage() {
               </Button>
             </form>
 
-            <p className="text-center text-sm text-gray-500 mt-5">
-              ¿Quieres ser voluntario?{" "}
-              <a href="/" className="text-[#00A8E8] font-semibold hover:underline">
-                Únete a un centro
-              </a>
-            </p>
+            <div className="mt-5 pt-5 border-t border-gray-100 space-y-1.5 text-center text-sm text-gray-500">
+              <p>
+                ¿Tienes un centro de acopio?{" "}
+                <a href="/registrar-centro" className="text-[#00A8E8] font-semibold hover:underline">
+                  Regístralo aquí
+                </a>
+              </p>
+              <p>
+                ¿Quieres ser voluntario?{" "}
+                <a href="/registrar-voluntario" className="text-[#00A8E8] font-semibold hover:underline">
+                  Únete a un centro
+                </a>
+              </p>
+            </div>
           </div>
 
           <p className="text-center text-xs text-gray-400 mt-6">

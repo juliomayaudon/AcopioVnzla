@@ -88,6 +88,7 @@ export default function HomePage() {
         <div className="ml-auto flex items-center gap-6">
           <a href="#centros" className="hidden sm:block text-sm text-gray-600 hover:text-[#1B3078] font-medium">Centros</a>
           <a href="#mapa"    className="hidden sm:block text-sm text-gray-600 hover:text-[#1B3078] font-medium">Mapa</a>
+          <Link href="/registrar-centro" className="hidden sm:block text-sm text-gray-600 hover:text-[#1B3078] font-medium">Registra tu centro</Link>
           <Link href="/login" className="bg-[#1B3078] text-white text-sm font-semibold px-4 py-2 rounded-lg hover:bg-[#142360] transition-colors">
             Ingresar al sistema
           </Link>
@@ -136,11 +137,19 @@ export default function HomePage() {
             ))}
           </div>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
-            <a href="#centros" className="inline-flex items-center gap-2 bg-[#00A8E8] text-white font-semibold px-6 py-3 rounded-xl hover:bg-[#0090C8] transition-colors">
-              Ver centros <ArrowRight size={16} />
+            <Link href="/registrar-centro" className="inline-flex items-center gap-2 bg-[#00A8E8] text-white font-semibold px-6 py-3 rounded-xl hover:bg-[#0090C8] transition-colors">
+              Registra tu centro <ArrowRight size={16} />
+            </Link>
+            <Link href="/registrar-voluntario" className="inline-flex items-center gap-2 bg-white text-[#1B3078] font-semibold px-6 py-3 rounded-xl hover:bg-white/90 transition-colors">
+              Únete como voluntario <Users size={16} />
+            </Link>
+          </div>
+          <div className="flex flex-col sm:flex-row gap-3 justify-center mt-3">
+            <a href="#centros" className="inline-flex items-center gap-2 text-white/80 font-medium px-4 py-2 rounded-xl hover:text-white transition-colors text-sm">
+              Ver centros <ArrowRight size={15} />
             </a>
-            <Link href="/login" className="inline-flex items-center gap-2 bg-white/10 text-white font-semibold px-6 py-3 rounded-xl hover:bg-white/20 transition-colors border border-white/20">
-              Acceder al sistema <ExternalLink size={16} />
+            <Link href="/login" className="inline-flex items-center gap-2 text-white/80 font-medium px-4 py-2 rounded-xl hover:text-white transition-colors text-sm">
+              Acceder al sistema <ExternalLink size={15} />
             </Link>
           </div>
         </div>

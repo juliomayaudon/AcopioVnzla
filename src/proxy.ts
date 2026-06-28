@@ -6,7 +6,11 @@ const PUBLIC_PATHS = [
   "/api/centros",
   "/api/stats",
   "/api/public",
+  "/api/geocode",
+  "/api/registro",
   "/centro",
+  "/registrar-centro",
+  "/registrar-voluntario",
 ];
 
 export default async function proxy(req: NextRequest) {
