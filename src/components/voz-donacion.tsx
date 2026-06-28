@@ -145,7 +145,9 @@ export default function VozDonacion({ productos, onAdd }: {
   const escuchandoRef = useRef(false);
   const prodRef = useRef(productos);
   const onAddRef = useRef(onAdd);
-  const bufferRef = useRef("");
+  const sesionRef = useRef("");       // transcripción final de la sesión actual
+  const procesadoRef = useRef(0);     // cuántos caracteres de la sesión ya procesamos
+  const ultimoRef = useRef<{ sig: string; t: number } | null>(null); // anti-duplicado
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const flushRef = useRef<() => void>(() => {});
   useEffect(() => { prodRef.current = productos; }, [productos]);
@@ -159,30 +161,41 @@ export default function VozDonacion({ productos, onAdd }: {
     rec.continuous = true;
     rec.interimResults = true;
 
-    // Procesa la frase completa acumulada (tras una pausa al hablar)
+    // Procesa SOLO lo nuevo de la sesión (lo que aún no se había procesado)
     const flush = () => {
       if (timerRef.current) { clearTimeout(timerRef.current); timerRef.current = null; }
-      const frase = bufferRef.current.trim();
-      bufferRef.current = "";
+      const full = sesionRef.current.trim();
+      const nuevo = full.slice(procesadoRef.current).trim();
+      procesadoRef.current = full.length;
       setInterim("");
-      if (!frase) return;
-      const r = parseFrase(frase, prodRef.current);
-      if (r.matched && r.item) { onAddRef.current(r.item); setFeedback({ ok: true, msg: r.resumen }); }
-      else setFeedback({ ok: false, msg: `No reconocí: "${r.texto}"` });
+      if (!nuevo) return;
+      const r = parseFrase(nuevo, prodRef.current);
+      if (r.matched && r.item) {
+        // Evita procesar la misma frase dos veces (re-emisión del reconocedor)
+        const sig = norm(nuevo);
+        const ahora = Date.now();
+        if (ultimoRef.current && ultimoRef.current.sig === sig && ahora - ultimoRef.current.t < 2500) return;
+        ultimoRef.current = { sig, t: ahora };
+        onAddRef.current(r.item);
+        setFeedback({ ok: true, msg: r.resumen });
+      } else {
+        setFeedback({ ok: false, msg: `No reconocí: "${r.texto}"` });
+      }
     };
     flushRef.current = flush;
 
     rec.onresult = (e: any) => {
-      let intTxt = "";
-      for (let i = e.resultIndex; i < e.results.length; i++) {
+      let finalTxt = "", intTxt = "";
+      for (let i = 0; i < e.results.length; i++) {
         const txt = e.results[i][0].transcript;
-        if (e.results[i].isFinal) bufferRef.current = (bufferRef.current + " " + txt).trim();
+        if (e.results[i].isFinal) finalTxt += txt + " ";
         else intTxt += txt;
       }
-      setInterim((bufferRef.current + " " + intTxt).trim());
-      // Espera ~1s sin nueva voz → considera la frase terminada y la procesa
+      sesionRef.current = finalTxt.trim();
+      setInterim((sesionRef.current.slice(procesadoRef.current) + " " + intTxt).trim());
+      // Espera ~1.1s sin nueva voz → frase terminada → procesa
       if (timerRef.current) clearTimeout(timerRef.current);
-      timerRef.current = setTimeout(flush, 1000);
+      timerRef.current = setTimeout(flush, 1100);
     };
     rec.onerror = (e: any) => {
       if (e.error === "not-allowed" || e.error === "service-not-allowed") {
@@ -192,9 +205,12 @@ export default function VozDonacion({ productos, onAdd }: {
       }
     };
     rec.onend = () => {
-      // En móvil se corta solo: si seguimos en modo escucha, reinicia
-      if (escuchandoRef.current) { try { rec.start(); } catch {} }
-      else setInterim("");
+      if (escuchandoRef.current) {
+        flush();                       // procesa lo pendiente antes de reiniciar
+        sesionRef.current = "";        // sesión nueva limpia (evita re-procesar)
+        procesadoRef.current = 0;
+        try { rec.start(); } catch {}
+      } else { setInterim(""); }
     };
     recRef.current = rec;
     return () => {
@@ -213,6 +229,9 @@ export default function VozDonacion({ productos, onAdd }: {
       flushRef.current();   // procesa lo que haya quedado pendiente
     } else {
       setFeedback(null);
+      sesionRef.current = "";
+      procesadoRef.current = 0;
+      ultimoRef.current = null;
       escuchandoRef.current = true;
       setEscuchando(true);
       try { recRef.current.start(); } catch {}
