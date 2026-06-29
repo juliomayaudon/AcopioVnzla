@@ -12,6 +12,9 @@ const PUBLIC_PATHS = [
   "/registrar-centro",
   "/registrar-voluntario",
   "/como-funciona",
+  "/opengraph-image",
+  "/twitter-image",
+  "/icon",
 ];
 
 export default async function proxy(req: NextRequest) {
